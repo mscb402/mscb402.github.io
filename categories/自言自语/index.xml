@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>自言自语 on Jonathan Chen&#39;s Blog</title>
+    <link>https://mscb402.github.io/categories/%E8%87%AA%E8%A8%80%E8%87%AA%E8%AF%AD/</link>
+    <description>Recent content in 自言自语 on Jonathan Chen&#39;s Blog</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <lastBuildDate>Thu, 21 Mar 2019 20:46:41 +0800</lastBuildDate>
+    
+	<atom:link href="https://mscb402.github.io/categories/%E8%87%AA%E8%A8%80%E8%87%AA%E8%AF%AD/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>你好世界</title>
+      <link>https://mscb402.github.io/article/first_article/</link>
+      <pubDate>Thu, 21 Mar 2019 20:46:41 +0800</pubDate>
+      
+      <guid>https://mscb402.github.io/article/first_article/</guid>
+      <description>你好啊！
+这是我的博客。
+学习编程很长时间了，中间也开过几年博客。但是基本没什么人光顾，只是自言自语的写博文，觉得没什么意思，后来也就没继续写下去了。
+现在的话，只是觉得作为一个从事技术的人来说，没有写博客，没有对知识进行积累是不太够的。
+所以开了一个用Hugo生成的博客，寄存在Github Page下，希望接下来能开始写一些内容。</description>
+    </item>
+    
+  </channel>
+</rss>
