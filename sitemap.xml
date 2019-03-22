@@ -8,6 +8,11 @@
   </url>
   
   <url>
+    <loc>https://mscb402.github.io/page/github/</loc>
+    <lastmod>2017-11-01T13:17:56+01:00</lastmod>
+  </url>
+  
+  <url>
     <loc>https://mscb402.github.io/article/</loc>
     <lastmod>2019-03-21T20:46:41+08:00</lastmod>
     <priority>0</priority>
@@ -36,8 +41,18 @@
   </url>
   
   <url>
+    <loc>https://mscb402.github.io/page/</loc>
+    <lastmod>2017-11-01T13:17:56+01:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
     <loc>https://mscb402.github.io/tags/</loc>
     <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>https://mscb402.github.io/page/about-me/</loc>
   </url>
   
   <url>

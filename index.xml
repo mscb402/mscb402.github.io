@@ -7,7 +7,7 @@
     <generator>Hugo -- gohugo.io</generator>
     <lastBuildDate>Thu, 21 Mar 2019 20:46:41 +0800</lastBuildDate>
     
-        <atom:link href="https://mscb402.github.io/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="https://mscb402.github.io/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
@@ -21,6 +21,24 @@
 学习编程很长时间了，中间也开过几年博客。但是基本没什么人光顾，只是自言自语的写博文，觉得没什么意思，后来也就没继续写下去了。
 现在的话，只是觉得作为一个从事技术的人来说，没有写博客，没有对知识进行积累是不太够的。
 所以开了一个用Hugo生成的博客，寄存在Github Pages下，希望接下来能开始写一些内容。</description>
+    </item>
+    
+    <item>
+      <title>Github</title>
+      <link>https://mscb402.github.io/page/github/</link>
+      <pubDate>Wed, 01 Nov 2017 13:17:56 +0100</pubDate>
+      
+      <guid>https://mscb402.github.io/page/github/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>关于我</title>
+      <link>https://mscb402.github.io/page/about-me/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://mscb402.github.io/page/about-me/</guid>
+      <description>Jonathan Chen</description>
     </item>
     
   </channel>

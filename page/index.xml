@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Pages on Jonathan Chen&#39;s Blog</title>
+    <link>https://mscb402.github.io/page/</link>
+    <description>Recent content in Pages on Jonathan Chen&#39;s Blog</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <lastBuildDate>Wed, 01 Nov 2017 13:17:56 +0100</lastBuildDate>
+    
+	<atom:link href="https://mscb402.github.io/page/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Github</title>
+      <link>https://mscb402.github.io/page/github/</link>
+      <pubDate>Wed, 01 Nov 2017 13:17:56 +0100</pubDate>
+      
+      <guid>https://mscb402.github.io/page/github/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>关于我</title>
+      <link>https://mscb402.github.io/page/about-me/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://mscb402.github.io/page/about-me/</guid>
+      <description>Jonathan Chen</description>
+    </item>
+    
+  </channel>
+</rss>
