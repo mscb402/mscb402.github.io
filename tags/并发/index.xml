@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Articles on Jonathan Chen&#39;s Blog</title>
-    <link>https://mscb402.github.io/article/</link>
-    <description>Recent content in Articles on Jonathan Chen&#39;s Blog</description>
+    <title>并发 on Jonathan Chen&#39;s Blog</title>
+    <link>https://mscb402.github.io/tags/%E5%B9%B6%E5%8F%91/</link>
+    <description>Recent content in 并发 on Jonathan Chen&#39;s Blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <lastBuildDate>Sat, 23 Mar 2019 14:42:22 +0800</lastBuildDate>
     
-	<atom:link href="https://mscb402.github.io/article/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="https://mscb402.github.io/tags/%E5%B9%B6%E5%8F%91/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
@@ -25,19 +25,6 @@
 并行只是在同一个时刻有多程序在同时运行。并发就是在一个时间段里面，有多个程序在执行。
 看起来这句话还是很难理解，其实他们最大区别就在于，一个是在同一时刻，一个是在同一时间段。时刻表示某一个时间的极限。所谓时间段表示在某一个时间范围，比如说一秒钟， 或者说一分钟。而在这个时间段里面，程序并不一定是同时执行的。
 学习过操作系统原理的同学应该都知道，在单核 CPU 里面，不同的程序进程并不是同时在执行，而是有一个叫调度器东西， 在依次执行我们的进程。比如每个进程执行100ms，执行时间到了就切换到下个进程继续执行。而由于 CPU 的运算速度实在太快，所以在我们人的时间观念来看好像是同时执行的一样。而实际上在一秒钟CPU可能已经切换了十多个程序。</description>
-    </item>
-    
-    <item>
-      <title>你好世界</title>
-      <link>https://mscb402.github.io/article/first_article/</link>
-      <pubDate>Thu, 21 Mar 2019 20:46:41 +0800</pubDate>
-      
-      <guid>https://mscb402.github.io/article/first_article/</guid>
-      <description>你好啊！
-这是我的博客。
-学习编程很长时间了，中间也开过几年博客。但是基本没什么人光顾，只是自言自语的写博文，觉得没什么意思，后来也就没继续写下去了。
-现在的话，只是觉得作为一个从事技术的人来说，没有写博客，没有对知识进行积累是不太够的。
-所以开了一个用Hugo生成的博客，寄存在Github Pages下，希望接下来能开始写一些内容。</description>
     </item>
     
   </channel>

@@ -7,21 +7,21 @@
         <meta name="description" content="Keep curious!">
         <meta name="keywords" content="blog, technology, python, pythonista, programming, developer, software developer, software engineer, azure, cloud, cloud computing, testing, clean code">
         <meta name="generator" content="Hugo 0.54.0" />
-        <title> Pages | Jonathan Chen&#39;s Blog</title>
-        <meta name="description" content="Pages - Keep curious!">
-        <meta itemprop="name" content="Pages">
-        <meta itemprop="description" content="Pages - Keep curious!">
-        <meta property="og:title" content="Pages">
-        <meta property="og:description" content="Pages - Keep curious!">
+        <title> 技术 | Jonathan Chen&#39;s Blog</title>
+        <meta name="description" content="技术 - Keep curious!">
+        <meta itemprop="name" content="技术">
+        <meta itemprop="description" content="技术 - Keep curious!">
+        <meta property="og:title" content="技术">
+        <meta property="og:description" content="技术 - Keep curious!">
         <meta property="og:image" content="https://www.gravatar.com/avatar/73e7f10f7883ff287d4571c4c190fd93?size=200">
-        <meta property="og:url" content="https://mscb402.github.io/page/">
+        <meta property="og:url" content="https://mscb402.github.io/categories/%E6%8A%80%E6%9C%AF/">
         <meta property="og:site_name" content="Jonathan Chen&#39;s Blog"><meta property="og:type" content="website">
         <link rel="icon" type="image/png" href="https://mscb402.github.io/favicon-32x32.png" sizes="32x32">
         <link rel="icon" type="image/png" href="https://mscb402.github.io/favicon-16x16.png" sizes="16x16">
 
 	
-	  <link href="https://mscb402.github.io/page/index.xml" rel="alternate" type="application/rss+xml" title="Jonathan Chen&#39;s Blog" />
-	  <link href="https://mscb402.github.io/page/index.xml" rel="feed" type="application/rss+xml" title="Jonathan Chen&#39;s Blog" />
+	  <link href="https://mscb402.github.io/categories/%E6%8A%80%E6%9C%AF/index.xml" rel="alternate" type="application/rss+xml" title="Jonathan Chen&#39;s Blog" />
+	  <link href="https://mscb402.github.io/categories/%E6%8A%80%E6%9C%AF/index.xml" rel="feed" type="application/rss+xml" title="Jonathan Chen&#39;s Blog" />
 	
 
         
@@ -102,8 +102,91 @@
             
     
     
+        <div class="article-wrapper u-cf">
+            
+                <a class="bubble" href="/article/2019-3-23/">
+    <i class="fa fa-fw fa-pencil"></i>
+</a>
+
+<article class="default article">
+    
+
+    <div class="content">
+    <h3><a href="/article/2019-3-23/">并发与并行，阻塞与非阻塞，异步与同步</a></h3>
+    <div class="meta">
+        
+            
+                <span class="date moment">2019-03-23</span>
+            
+        
+
+        
+
+        
+            <span class="categories">
+                
+                    <a href="/categories/%E6%8A%80%E6%9C%AF%E6%A6%82%E5%BF%B5">技术概念</a>
+                
+                    <a href="/categories/%E6%8A%80%E6%9C%AF">技术</a>
+                
+            </span>
+        
+
+        
+            <span class="author"><a href="/author/jonathan-chen">Jonathan Chen</a></span>
+        
+    </div>
 
     
+        并发与并行、阻塞与非阻塞、异步与同步，这几个概念在服务端开发过程中非常重要。今天我们来说一说这几个技术的区别。请注意，每一个都应该分开理解，不要把混在一起，因为他们之间有一些交集，如果混在一起理解容易使人混淆。
+并发与并行 并发和并行其实不一样，在中文的语意下，有时候很容易搞不清楚，毕竟都是“并”字打头的。就像我长期无法快速分辨并联和串联一样。听到词以后缓个几秒才能区分并联和串联的区别。不知道这种情况是不是只有我一个人有。
+但是，其实这个东西我们从从英文状态下我们可以很容易的分辨。
+并发的英文是Concurrent，并行的英文是Parallel。
+我们可以看到“并行”这个英文单词Parallel,他可以和“宇宙”（Universe）这个词形成一个“平行宇宙”（Parallel Universe），所谓的平行宇宙就是在同一个时刻下有多重现实，这就符合我们对并行的定义了。
+所以，我们可以从这个词的本意出发来理解并行与并发。
+并行只是在同一个时刻有多程序在同时运行。并发就是在一个时间段里面，有多个程序在执行。
+看起来这句话还是很难理解，其实他们最大区别就在于，一个是在同一时刻，一个是在同一时间段。时刻表示某一个时间的极限。所谓时间段表示在某一个时间范围，比如说一秒钟， 或者说一分钟。而在这个时间段里面，程序并不一定是同时执行的。
+学习过操作系统原理的同学应该都知道，在单核 CPU 里面，不同的程序进程并不是同时在执行，而是有一个叫调度器东西， 在依次执行我们的进程。比如每个进程执行100ms，执行时间到了就切换到下个进程继续执行。而由于 CPU 的运算速度实在太快，所以在我们人的时间观念来看好像是同时执行的一样。而实际上在一秒钟CPU可能已经切换了十多个程序。
+
+        
+            <a href="/article/2019-3-23/" class="more">继续阅读</a>
+        
+    
+</div>
+
+    
+<div class="footer">
+
+
+    
+        <div class="tags">
+            <i class="fa fa-tags"></i>
+            <div class="links">
+                
+                    <a href="/tags/%E5%B9%B6%E5%8F%91">并发</a>
+                
+                    <a href="/tags/%E5%B9%B6%E8%A1%8C">并行</a>
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+</article>
+
+            
+        </div>
+    
+
+    
+    <div class="paginator">
+        
+
+        
+    </div>
+
 
 
         </div>
@@ -190,7 +273,7 @@
                 by Chen Beng (Jonathan Chen)
             </a>
 	    -
-		<a href="https://mscb402.github.io/page/index.xml">RSS</a>
+		<a href="https://mscb402.github.io/categories/%E6%8A%80%E6%9C%AF/index.xml">RSS</a>
         </div>
         <div class="author">
             <a href="https://github.com/Lednerb/bilberry-hugo-theme" target="_blank">Bilberry Hugo Theme</a>
