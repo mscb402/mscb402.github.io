@@ -1,0 +1,330 @@
+<!doctype html>
+<html class="no-js" lang="zh-cn">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="author" content="Jonathan Chen">
+        <meta name="description" content="Keep curious!">
+        <meta name="keywords" content="blog, technology, python, pythonista, programming, developer, software developer, software engineer, azure, cloud, cloud computing, testing, clean code">
+        <meta name="generator" content="Hugo 0.54.0" />
+        <title> Php | Jonathan Chen&#39;s Blog</title>
+        <meta name="description" content="Php - Keep curious!">
+        <meta itemprop="name" content="Php">
+        <meta itemprop="description" content="Php - Keep curious!">
+        <meta property="og:title" content="Php">
+        <meta property="og:description" content="Php - Keep curious!">
+        <meta property="og:image" content="https://www.gravatar.com/avatar/73e7f10f7883ff287d4571c4c190fd93?size=200">
+        <meta property="og:url" content="https://mscb402.github.io/tags/php/">
+        <meta property="og:site_name" content="Jonathan Chen&#39;s Blog"><meta property="og:type" content="website">
+        <link rel="icon" type="image/png" href="https://mscb402.github.io/favicon-32x32.png" sizes="32x32">
+        <link rel="icon" type="image/png" href="https://mscb402.github.io/favicon-16x16.png" sizes="16x16">
+
+	
+	  <link href="https://mscb402.github.io/tags/php/index.xml" rel="alternate" type="application/rss+xml" title="Jonathan Chen&#39;s Blog" />
+	  <link href="https://mscb402.github.io/tags/php/index.xml" rel="feed" type="application/rss+xml" title="Jonathan Chen&#39;s Blog" />
+	
+
+        
+        <link rel="stylesheet" href="https://mscb402.github.io/sass/theme.min.7f4b7ce40e75c56b2479c669b6e33cd1381e870b71fcf495203cc50ba0259faa.css">
+
+        
+
+        
+            
+        
+    </head>
+    <body class="bilberry-hugo-theme">
+        
+<nav>
+
+    <div class="container">
+        <ul class="topnav">
+            
+                
+                    <li><a href="https://github.com/mscb402" target="_blank">Github</a></li>
+                
+            
+                
+                    <li><a href="/page/about/">关于我</a></li>
+                
+            
+        </ul>
+
+        
+    </div>
+</nav>
+
+
+        <header>
+    <div class="container">
+        <div class="logo">
+            <a href="/page/about/" class="logo">
+                
+                    <img src="https://www.gravatar.com/avatar/73e7f10f7883ff287d4571c4c190fd93?d=mm&size=200" alt="">
+                
+
+                <span class="overlay"><i class="fa fa-home"></i></span>
+            </a>
+        </div>
+        <div class="titles">
+            <h3 class="title"><a href="/">Jonathan Chen&#39;s Blog</a>
+            </h3>
+            
+                <span class="subtitle">Keep curious!</span>
+            
+            <h3 class="title">
+                <div class="social-media">
+                    
+                        <a href="https://twitter.com/chenbeng1" target="_blank"><i class="fa fa-twitter"></i></a>
+                    
+                    
+                        <a href="https://github.com/mscb402" target="_blank"><i class="fa fa-github"></i></a>
+                    
+                    
+                    
+                    
+                </div>
+            </h3>
+        </div>
+
+    
+
+        
+        <div class="toggler">
+        
+            <i class="fa fa-bars" aria-hidden="true"></i>
+        </div>
+    </div>
+</header>
+
+
+        <div class="main container">
+            
+    
+    
+        <div class="article-wrapper u-cf">
+            
+                <a class="bubble" href="/article/3-29/">
+    <i class="fa fa-fw fa-pencil"></i>
+</a>
+
+<article class="default article">
+    
+
+    <div class="content">
+    <h3><a href="/article/3-29/">PHP协程之路-什么是协程</a></h3>
+    <div class="meta">
+        
+            
+                <span class="date moment">2019-03-29</span>
+            
+        
+
+        
+
+        
+            <span class="categories">
+                
+                    <a href="/categories/php">PHP</a>
+                
+                    <a href="/categories/%E6%8A%80%E6%9C%AF">技术</a>
+                
+            </span>
+        
+
+        
+            <span class="author"><a href="/author/jonathan-chen">Jonathan Chen</a></span>
+        
+    </div>
+
+    
+        协程这几年可谓是大火，作为一个合格的后端开发者，不懂协程简直说不过去。接下来我准备写一系列文章来详细说说协程，并从零实现一个简单的PHP协程框架。我最早接触到协程是从Golang这个语言。现在协程的的框架和应用太多了，目前PHP内用的比较多的是带有协程功能的Swoole扩展，确实对高并发的应用有一定帮助。
+我个人还是比较喜欢Golang，总觉得写起来比较舒服，当然这是个人的看法，每个人都有自己喜欢的语言，过多争论也没啥意义。
+要了解协程，我们要先了解一下为什么我们要用这个东西。所谓知其所以然，也要知其所以然。
+进程 进程大家实在是太熟悉了，就算是不了解编程的人也大概率知道“一个程序是一个进程，电脑慢的时候打开进程管理器杀死进程即可”。
+不过作为专业人士我们当然不能这么片面的理解，至少我们得知道一个程序并不是只有一个进程 :)
+远古时期，那会的计算机一次只能执行一个程序。后来设计了分时系统，就是同一个时间段，可以运行多个程序，给使用者一种错觉好像各个程序是一起在运行的。而实际上在我们关于“并发和并行”的文章里也说了，单核计算机其实每一个时间点只能执行一个程序，只是由于执行速度太快看起来好像同时执行一样。
+那操作系统就需要开发一个调度器，在1秒里面不断的切换程序。不过“程序”其实是一个很不精确的词，因为它单单表示一个可执行文件，而操作系统在调度的时候不可能去调度一个本地的“可执行文件”。
+举个例子，如果是以“可执行文件”作为调度单位，那么你大概会遇到这样的情况。你打开浏览器，并访问谷歌，又打开了一个音乐软件，开始听音乐。然后操作系统开始调度程序，你会发现你浏览器打开的标签一下子就没了，然后你的音乐软件不断的从头开始播放音乐。简直奔溃！这样的电脑不用也罢。
+所以，我们要调度程序，不能仅仅调度“可执行程序”，而是要在调度之前先保存当前进度，举个例子调度前记录下你音乐播放到什么位置了，浏览器当前打开的标签内容、滚动条位置。
+以上，我们称之为“程序上下文context”。在调度之前要保护起程序的执行状态，也就是调度前把这些东西存储在内存里，下一次再读取回来重新执行。
+那么程序上下文都包含哪些东西呢？不同操作系统包含的东西都不一样，需要看操作系统的具体实现。
+不过有一些东西是通用，比如：1. 当前程序的寄存器状态，2.
+
+        
+            <a href="/article/3-29/" class="more">继续阅读</a>
+        
+    
+</div>
+
+    
+<div class="footer">
+
+
+    
+        <div class="tags">
+            <i class="fa fa-tags"></i>
+            <div class="links">
+                
+                    <a href="/tags/php">PHP</a>
+                
+                    <a href="/tags/%E6%8A%80%E6%9C%AF">技术</a>
+                
+                    <a href="/tags/%E5%8D%8F%E7%A8%8B">协程</a>
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+</article>
+
+            
+        </div>
+    
+
+    
+    <div class="paginator">
+        
+
+        
+    </div>
+
+
+
+        </div>
+
+        
+<footer>
+    <div class="container">
+
+        
+        <div class="recent-posts">
+            <strong>最新帖子</strong>
+                <ul>
+                
+                    <li>
+                        <a href="/article/3-29/">PHP协程之路-什么是协程</a>
+                    </li>
+                
+                    <li>
+                        <a href="/article/2019-3-23/">并发与并行，阻塞与非阻塞，异步与同步</a>
+                    </li>
+                
+                    <li>
+                        <a href="/article/first_article/">你好世界</a>
+                    </li>
+                
+                </ul>
+        </div>
+        
+
+        
+        <div class="categories">
+            <a href="/categories/"><strong>分类</strong></a>
+                <ul>
+                
+                    <li>
+                        <a href="/categories/%E6%8A%80%E6%9C%AF">技术 (2)</a>
+                    </li>
+                
+                    <li>
+                        <a href="/categories/php">Php (1)</a>
+                    </li>
+                
+                    <li>
+                        <a href="/categories/%E6%8A%80%E6%9C%AF%E6%A6%82%E5%BF%B5">技术概念 (1)</a>
+                    </li>
+                
+                    <li>
+                        <a href="/categories/%E8%87%AA%E8%A8%80%E8%87%AA%E8%AF%AD">自言自语 (1)</a>
+                    </li>
+                
+            </ul>
+        </div>
+        
+
+        <div class="right">
+            
+            <div class="external-profiles">
+                <strong>社交媒体</strong>
+
+                
+                
+                    <a href="https://twitter.com/chenbeng1" target="_blank"><i class="fa fa-twitter-adblock-proof"></i></a>
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                    <a href="https://github.com/mscb402" target="_blank"><i class="fa fa-github"></i></a>
+                
+                
+            </div>
+            
+
+            
+        </div>
+    </div>
+</footer>
+
+
+<div class="credits">
+    <div class="container">
+        <div class="copyright">
+            <a href="https://github.com/mscb402" target="_blank">
+                &copy;
+                
+                    2019
+                
+                by Chen Beng (Jonathan Chen)
+            </a>
+	    -
+		<a href="https://mscb402.github.io/tags/php/index.xml">RSS</a>
+        </div>
+        <div class="author">
+            <a href="https://github.com/Lednerb/bilberry-hugo-theme" target="_blank">Bilberry Hugo Theme</a>
+        </div>
+    </div>
+</div>
+
+
+        
+
+        
+
+        
+        
+        <script type="text/javascript" src="https://mscb402.github.io/js/externalDependencies.2a3cf2b558bd16302d997f6c20de885831fe6e39f05a054ddede6211a4a78d882081b58973893707bbefb74dc3611b37e66edb04bc5f075f4a198b2d135d96ae.js" integrity="sha512-KjzytVi9FjAtmX9sIN6IWDH&#43;bjnwWgVN3t5iEaSnjYgggbWJc4k3B7vvt03DYRs35m7bBLxfB19KGYstE12Wrg=="></script>
+
+        
+        
+        <script type="text/javascript" src="https://mscb402.github.io/js/theme.4654b7979e5c207ce920e7ee52f8f636b675001c63c1bc659f218ba45ddfb8cf.js" integrity="sha256-RlS3l55cIHzpIOfuUvj2NrZ1ABxjwbxlnyGLpF3fuM8="></script>
+
+        <script>
+            $(".moment").each(function() {
+                $(this).text(
+                    moment( $(this).text() )
+                        .locale( "zh-cn" )
+                        .format('LL')
+                );
+            });
+
+            $(".footnote-return sup").html("【返回】");
+        </script>
+
+        
+            
+        
+
+        
+
+
+    </body>
+</html>
