@@ -3,6 +3,11 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
+    <loc>https://mscb402.github.io/article/2019-4-7/</loc>
+    <lastmod>2019-04-07T12:18:31+08:00</lastmod>
+  </url>
+  
+  <url>
     <loc>https://mscb402.github.io/article/3-29/</loc>
     <lastmod>2019-03-29T13:41:10+08:00</lastmod>
   </url>
@@ -24,7 +29,7 @@
   
   <url>
     <loc>https://mscb402.github.io/article/</loc>
-    <lastmod>2019-03-29T13:41:10+08:00</lastmod>
+    <lastmod>2019-04-07T12:18:31+08:00</lastmod>
     <priority>0</priority>
   </url>
   
@@ -40,13 +45,13 @@
   
   <url>
     <loc>https://mscb402.github.io/author/jonathan-chen/</loc>
-    <lastmod>2019-03-29T13:41:10+08:00</lastmod>
+    <lastmod>2019-04-07T12:18:31+08:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
     <loc>https://mscb402.github.io/</loc>
-    <lastmod>2019-03-29T13:41:10+08:00</lastmod>
+    <lastmod>2019-04-07T12:18:31+08:00</lastmod>
     <priority>0</priority>
   </url>
   
@@ -58,19 +63,19 @@
   
   <url>
     <loc>https://mscb402.github.io/tags/php/</loc>
-    <lastmod>2019-03-29T13:41:10+08:00</lastmod>
+    <lastmod>2019-04-07T12:18:31+08:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
     <loc>https://mscb402.github.io/categories/php/</loc>
-    <lastmod>2019-03-29T13:41:10+08:00</lastmod>
+    <lastmod>2019-04-07T12:18:31+08:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
     <loc>https://mscb402.github.io/tags/</loc>
-    <lastmod>2019-03-29T13:41:10+08:00</lastmod>
+    <lastmod>2019-04-07T12:18:31+08:00</lastmod>
     <priority>0</priority>
   </url>
   
@@ -80,7 +85,7 @@
   
   <url>
     <loc>https://mscb402.github.io/tags/%E5%8D%8F%E7%A8%8B/</loc>
-    <lastmod>2019-03-29T13:41:10+08:00</lastmod>
+    <lastmod>2019-04-07T12:18:31+08:00</lastmod>
     <priority>0</priority>
   </url>
   
@@ -98,13 +103,13 @@
   
   <url>
     <loc>https://mscb402.github.io/tags/%E6%8A%80%E6%9C%AF/</loc>
-    <lastmod>2019-03-29T13:41:10+08:00</lastmod>
+    <lastmod>2019-04-07T12:18:31+08:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
     <loc>https://mscb402.github.io/categories/%E6%8A%80%E6%9C%AF/</loc>
-    <lastmod>2019-03-29T13:41:10+08:00</lastmod>
+    <lastmod>2019-04-07T12:18:31+08:00</lastmod>
     <priority>0</priority>
   </url>
   

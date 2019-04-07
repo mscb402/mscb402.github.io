@@ -109,6 +109,83 @@
         
     <div class="article-wrapper u-cf">
         
+            <a class="bubble" href="/article/2019-4-7/">
+    <i class="fa fa-fw fa-pencil"></i>
+</a>
+
+<article class="default article">
+    
+
+    <div class="content">
+    <h3><a href="/article/2019-4-7/">PHP协程之路-yield语法糖</a></h3>
+    <div class="meta">
+        
+            
+                <span class="date moment">2019-04-07</span>
+            
+        
+
+        
+
+        
+            <span class="categories">
+                
+                    <a href="/categories/php">PHP</a>
+                
+                    <a href="/categories/%E6%8A%80%E6%9C%AF">技术</a>
+                
+            </span>
+        
+
+        
+            <span class="author"><a href="/author/jonathan-chen">Jonathan Chen</a></span>
+        
+    </div>
+
+    
+        上一篇文章，我们讲到了协程的意义，以及它出现是为了解决哪些痛点。也知道了，协程其实相当于在用户空间，实现一个操作系统的线程调度器。当然从某种意义上说，和操作系统的调度器也不太一样。不过总的来说需要实现以下功能：1.在代码的某一行挂起。2.在某个时间阶段再从刚才挂起的地方拉起，继续向下执行。说白了就是保存现场和恢复现场。在汇编层面，这就比较简单了，保存各个寄存器的值，等需要的时候恢复就可以了。剩下的就是一下内存空间的管理，这里就先不管。
+总之，如果要实现切换，必须要深入到底层去操作。而PHP作为一个上层的语言，可以说操作底层比较麻烦。除非PHP虚拟机给你提供了相关功能。
+在python中，我知道有一个yield语法可以实现函数在某个地方中断，在从某个地方拉起运行。结果后来居然发现PHP也有这个语法，不愧为世界上最好的语言（逃
+认识yield yield是PHP生成器的一个语法。yield和return一样，都会返回数据，但是最大的不同点在于return会结束掉整个函数，下一次再执行，会从头开始。比如
+&lt;?php function retFunc(){ return true; echo &quot;hello world&quot;; } retFunc(); retFunc(); retFunc();  这个代码，无论retFunc()这个函数调用多少次，“hello world”永远不会输出出来，因为在打印之前就已经return了，表示函数已经结束。
+
+        
+            <a href="/article/2019-4-7/" class="more">继续阅读</a>
+        
+    
+</div>
+
+    
+<div class="footer">
+
+
+    
+        <div class="tags">
+            <i class="fa fa-tags"></i>
+            <div class="links">
+                
+                    <a href="/tags/php">PHP</a>
+                
+                    <a href="/tags/%E6%8A%80%E6%9C%AF">技术</a>
+                
+                    <a href="/tags/%E5%8D%8F%E7%A8%8B">协程</a>
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+</article>
+
+        
+    </div>
+
+    
+        
+    <div class="article-wrapper u-cf">
+        
             <a class="bubble" href="/article/3-29/">
     <i class="fa fa-fw fa-pencil"></i>
 </a>
@@ -360,6 +437,10 @@
                 <ul>
                 
                     <li>
+                        <a href="/article/2019-4-7/">PHP协程之路-yield语法糖</a>
+                    </li>
+                
+                    <li>
                         <a href="/article/3-29/">PHP协程之路-什么是协程</a>
                     </li>
                 
@@ -381,11 +462,11 @@
                 <ul>
                 
                     <li>
-                        <a href="/categories/%E6%8A%80%E6%9C%AF">技术 (2)</a>
+                        <a href="/categories/%E6%8A%80%E6%9C%AF">技术 (3)</a>
                     </li>
                 
                     <li>
-                        <a href="/categories/php">Php (1)</a>
+                        <a href="/categories/php">Php (2)</a>
                     </li>
                 
                     <li>

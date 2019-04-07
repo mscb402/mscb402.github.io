@@ -1,0 +1,520 @@
+<!doctype html>
+<html class="no-js" lang="zh-cn">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="author" content="Jonathan Chen">
+        <meta name="description" content="Keep curious!">
+        <meta name="keywords" content="blog, technology, python, pythonista, programming, developer, software developer, software engineer, azure, cloud, cloud computing, testing, clean code">
+        <meta name="generator" content="Hugo 0.54.0" />
+        <title> PHP协程之路-yield语法糖 | Jonathan Chen&#39;s Blog</title>
+        <meta name="description" content="PHP协程之路-yield语法糖 - Keep curious!">
+        <meta itemprop="name" content="PHP协程之路-yield语法糖">
+        <meta itemprop="description" content="PHP协程之路-yield语法糖 - Keep curious!">
+        <meta property="og:title" content="PHP协程之路-yield语法糖">
+        <meta property="og:description" content="PHP协程之路-yield语法糖 - Keep curious!">
+        <meta property="og:image" content="https://www.gravatar.com/avatar/73e7f10f7883ff287d4571c4c190fd93?size=200">
+        <meta property="og:url" content="https://mscb402.github.io/article/2019-4-7/">
+        <meta property="og:site_name" content="Jonathan Chen&#39;s Blog">
+        <meta property="og:type" content="article">
+        <link rel="icon" type="image/png" href="https://mscb402.github.io/favicon-32x32.png" sizes="32x32">
+        <link rel="icon" type="image/png" href="https://mscb402.github.io/favicon-16x16.png" sizes="16x16">
+
+	
+
+        
+        <link rel="stylesheet" href="https://mscb402.github.io/sass/theme.min.7f4b7ce40e75c56b2479c669b6e33cd1381e870b71fcf495203cc50ba0259faa.css">
+
+        
+
+        
+            
+        
+    </head>
+    <body class="bilberry-hugo-theme">
+        
+<nav>
+
+    <div class="container">
+        <ul class="topnav">
+            
+                
+                    <li><a href="https://github.com/mscb402" target="_blank">Github</a></li>
+                
+            
+                
+                    <li><a href="/page/about/">关于我</a></li>
+                
+            
+        </ul>
+
+        
+    </div>
+</nav>
+
+
+        <header>
+    <div class="container">
+        <div class="logo">
+            <a href="/page/about/" class="logo">
+                
+                    <img src="https://www.gravatar.com/avatar/73e7f10f7883ff287d4571c4c190fd93?d=mm&size=200" alt="">
+                
+
+                <span class="overlay"><i class="fa fa-home"></i></span>
+            </a>
+        </div>
+        <div class="titles">
+            <h3 class="title"><a href="/">Jonathan Chen&#39;s Blog</a>
+            </h3>
+            
+                <span class="subtitle">Keep curious!</span>
+            
+            <h3 class="title">
+                <div class="social-media">
+                    
+                        <a href="https://twitter.com/chenbeng1" target="_blank"><i class="fa fa-twitter"></i></a>
+                    
+                    
+                        <a href="https://github.com/mscb402" target="_blank"><i class="fa fa-github"></i></a>
+                    
+                    
+                    
+                    
+                </div>
+            </h3>
+        </div>
+
+    
+
+        
+        <div class="toggler">
+        
+            <i class="fa fa-bars" aria-hidden="true"></i>
+        </div>
+    </div>
+</header>
+
+
+        <div class="main container">
+            
+     
+    <div class="article-wrapper u-cf single">
+        
+            <a class="bubble" href="/article/2019-4-7/">
+    <i class="fa fa-fw fa-pencil"></i>
+</a>
+
+<article class="default article">
+    
+
+    <div class="content">
+    <h3><a href="/article/2019-4-7/">PHP协程之路-yield语法糖</a></h3>
+    <div class="meta">
+        
+            
+                <span class="date moment">2019-04-07</span>
+            
+        
+
+        
+
+        
+            <span class="categories">
+                
+                    <a href="/categories/php">PHP</a>
+                
+                    <a href="/categories/%E6%8A%80%E6%9C%AF">技术</a>
+                
+            </span>
+        
+
+        
+            <span class="author"><a href="/author/jonathan-chen">Jonathan Chen</a></span>
+        
+    </div>
+
+    
+        
+
+<p>上一篇文章，我们讲到了协程的意义，以及它出现是为了解决哪些痛点。也知道了，协程其实相当于在用户空间，实现一个操作系统的线程调度器。当然从某种意义上说，和操作系统的调度器也不太一样。不过总的来说需要实现以下功能：1.在代码的某一行挂起。2.在某个时间阶段再从刚才挂起的地方拉起，继续向下执行。说白了就是保存现场和恢复现场。在汇编层面，这就比较简单了，保存各个寄存器的值，等需要的时候恢复就可以了。剩下的就是一下内存空间的管理，这里就先不管。</p>
+
+<p>总之，如果要实现切换，必须要深入到底层去操作。而PHP作为一个上层的语言，可以说操作底层比较麻烦。除非PHP虚拟机给你提供了相关功能。</p>
+
+<p>在python中，我知道有一个yield语法可以实现函数在某个地方中断，在从某个地方拉起运行。结果后来居然发现PHP也有这个语法，不愧为世界上最好的语言（逃</p>
+
+<h2 id="认识yield">认识yield</h2>
+
+<p>yield是PHP生成器的一个语法。yield和return一样，都会返回数据，但是最大的不同点在于return会结束掉整个函数，下一次再执行，会从头开始。比如</p>
+
+<pre><code class="language-php">&lt;?php
+    function retFunc(){
+    	return true;
+    	echo &quot;hello world&quot;;
+	}
+	
+	retFunc();
+	retFunc();
+	retFunc();
+</code></pre>
+
+<p>这个代码，无论<code>retFunc()</code>这个函数调用多少次，“hello world”永远不会输出出来，因为在打印之前就已经return了，表示函数已经结束。</p>
+
+<p>那如果情况是下面这样</p>
+
+<pre><code class="language-php">&lt;?php
+    function yieldFunc(){
+    	yield true;
+    	echo &quot;hello world&quot;;
+    	yield true;
+    	echo &quot;hello world again&quot;;
+	}
+	yieldFunc();
+	yieldFunc();
+	yieldFunc();
+</code></pre>
+
+<p>再一次我们用yield来代替return。试试看，诶？？好像还是没有任何值打印出来？</p>
+
+<p>这是因为生成器的调用和普通的函数调用不一样。</p>
+
+<p>我们用<code>var_dump</code>来看看他们之间的区别</p>
+
+<pre><code class="language-php">var_dump( yieldFunc() );
+var_dump( retFunc() );
+</code></pre>
+
+<p>你会发现，输出如下信息</p>
+
+<pre><code>object(Generator)#1 (0) {
+}
+bool(true)
+</code></pre>
+
+<p>可以看到，retFunc函数返回了一个bool型数据，这个数据是我们return的时候的数据。而yieldFunc并没有返回bool型数据（虽然我们yield true;），而是返回一个Object(Generator)这是一个生成器对象。也就是说，你每一次调用<code>yieldFunc()</code>都是返回一个生成器对象。</p>
+
+<p>如果要执行这个生成器，要按照生成器对象自己的规则来。</p>
+
+<h2 id="使用yield">使用yield</h2>
+
+<p>好了，那么问题来了，我们知道现在函数返回了一个生成器，接下来我们要去学会如何使用它。就像你花大价钱买了一个榴莲回家，结果不知道怎么打开榴莲，那就太浪费了。如果你在生活中发生这种事情，千万要冷静，不能惊慌。用袋子把榴莲包起来装好，马上打电话给我，我会去办你解决掉这个大烦恼(斜眼笑)。</p>
+
+<h3 id="最简单的方法-foreach">最简单的方法：foreach</h3>
+
+<p>PHP的foreach能处理这个迭代器。毕竟foreach本来就是处理循环迭代用的。</p>
+
+<p>假设现在我们有一个yield的函数</p>
+
+<pre><code class="language-php">function yieldNum(){
+    yield 1;
+    yield 2;
+    yield 3;
+    yield 4;
+    yield 5;
+}
+</code></pre>
+
+<p>然后我们就可以使用foreach来调用它</p>
+
+<pre><code class="language-php">foreach (yieldNum() as $num) {
+	echo $num, &quot;\n&quot;;
+}
+</code></pre>
+
+<p>最后会输出</p>
+
+<pre><code>1
+2
+3
+4
+5
+</code></pre>
+
+<p>哦，对了，简单讲一下，yield后面的值可以简单理解为每一次return回的数据。只不过这个‘return’和之前的函数return不一样。</p>
+
+<h3 id="使用generator对象">使用Generator对象</h3>
+
+<p>因为yield函数返回的是一个生成器Generator对象，所有。自然应该使用原生的Generator对象去操作。</p>
+
+<p>Generator对象的详细文档可以在PHP官方文档里找到：<a href="https://www.php.net/manual/en/class.generator.php">https://www.php.net/manual/en/class.generator.php</a></p>
+
+<p>对象如下</p>
+
+<pre><code class="language-php">Generator implements Iterator {
+    /* Methods */
+    public current ( void ) : mixed //获取当前yield的值
+    public getReturn ( void ) : mixed //获取函数的return值
+    public key ( void ) : mixed 
+    public next ( void ) : void //唤醒生成器执行
+    public rewind ( void ) : void //重置迭代器
+    public send ( mixed $value ) : mixed //中途发送数据给yield
+    public throw ( Throwable $exception ) : mixed
+    public valid ( void ) : bool //验证是否已经被关闭了
+    public __wakeup ( void ) : void
+}
+</code></pre>
+
+<p>然后我们用生成器来调用一下我们刚才的那个<code>yieldNum</code>函数。写起来就像下面这这个样子，确实没有foreach来的简洁。但好处是它更灵活，便于我们以后对生成器进行操作。</p>
+
+<pre><code class="language-php">$g = yieldNum(); //获取生成器
+while($g-&gt;valid()){ //看看是否还可用
+    echo $g-&gt;current().&quot;\n&quot;; //获取当前的yield返回的值
+    $g-&gt;next(); //移到下一步
+}
+</code></pre>
+
+<h2 id="与之交互">与之交互</h2>
+
+<p>如果仅仅能实现在函数的某个位置中断，显然还不够。我们希望不仅中断，还能在中断恢复的时候与之进行交互。也就是说，我们希望，下一次启动的时候，我们可以自己传一些值给他。</p>
+
+<p>如果我们仔细看一下Generator对象的实现，会发现有一个send方法。这个方法就是可以在函数再次启动的时候，赋值给它。</p>
+
+<p>我们来一个例子，假设有一个奇怪的函数<code>BlackBox</code>，它是一个生成器，每一次都会随机输出一个0～100的数字</p>
+
+<pre><code class="language-php">function BlackBox(){
+    while(true){
+        yield mt_rand(0,100);
+    }   
+}
+</code></pre>
+
+<p>然后我们调用它</p>
+
+<pre><code class="language-php">$g = BlackBox();
+echo $g-&gt;current().&quot;\n&quot;;
+$g-&gt;next();
+echo $g-&gt;current().&quot;\n&quot;;
+</code></pre>
+
+<p>会发现，打印出了2个随机数</p>
+
+<pre><code>37
+65
+</code></pre>
+
+<p>好了，然后我们现在有一个需求，希望我们可以随意调整最大值，就是说，再一次我们希望返回（0，100）的随机数，下一次我希望这个函数返回（0，1000）的随机数。这要怎么去实现呢？这就是send方法的用武之地了。</p>
+
+<p>我们重新修改一下我们的代码</p>
+
+<pre><code class="language-php">function BlackBox(){
+    $max = 100;
+    while(true){
+        $temp = (yield mt_rand(0,$max));
+        if($temp != null){
+            $max = $temp;
+        }
+    }
+
+}
+</code></pre>
+
+<p>先来简单解释一下这个代码。第一声明了一个<code>$max</code>变量，用于存储最大值，默认为100。然后不断循环。接着代码执行到<code>yield mt_rand(0,$max)</code>这个语句，程序会调用<code>mt_rand</code>生成一个<code>(0,$max)</code>的随机数，并暂停然后返回随机数。</p>
+
+<p>接下来的<code>$temp = (yield mt_rand(0,$max));</code>才是重头戏，右边由括号包裹，表示等代码重新启动运行的时候，右边的表达式会返回一个值（有send方法传输过去的），这个值会保存到变量$temp里面。</p>
+
+<p>如果temp变量里的值是null，则表示send方法没有传输值，又或者使用的是next方法。</p>
+
+<p><em>题外话，next方法其实就是send(null)的一种实现</em></p>
+
+<p>最后，判断一下temp变量里的值是否为null，如果不为空，则表示send了最大值，把这个值赋值给max变量，接下来再执行一次循环，代码暂停在<code>yield mt_rand(0,$max)</code>。等待下一次调用current方法去获取值。</p>
+
+<p>然后我们来看看调用方法</p>
+
+<pre><code class="language-php">$g = BlackBox();
+echo $g-&gt;current().&quot;\n&quot;;
+$g-&gt;next();
+echo $g-&gt;current().&quot;\n&quot;;
+$g-&gt;send(10000);
+echo $g-&gt;current().&quot;\n&quot;;
+</code></pre>
+
+<p>程序返回</p>
+
+<pre><code>8
+53
+1574
+</code></pre>
+
+<p>可以很明显的看出来，第一次第二次的随机数都是在100以内的，而第三次的随机数是10000以内的。我们的代码成功了！</p>
+
+<h2 id="总结">总结</h2>
+
+<p>OK，以上就是yield简单的使用方法。了解yield对我们进行了的文章很有帮助，因为我们的协程就是需要用到yield的这种特型来实现。如果有兴趣可以看看yield相关的教程。接下来的文章我们会继续走我们的PHP协程之路，让我们拭目以待吧～</p>
+
+<hr />
+
+<p><em>注意：本文未经许可，不得转载</em></p>
+
+    
+</div>
+
+    
+<div class="footer">
+
+
+    
+        <div class="tags">
+            <i class="fa fa-tags"></i>
+            <div class="links">
+                
+                    <a href="/tags/php">PHP</a>
+                
+                    <a href="/tags/%E6%8A%80%E6%9C%AF">技术</a>
+                
+                    <a href="/tags/%E5%8D%8F%E7%A8%8B">协程</a>
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+</article>
+
+        
+    </div>
+
+    
+        
+    
+
+     
+
+        </div>
+
+        
+<footer>
+    <div class="container">
+
+        
+        <div class="recent-posts">
+            <strong>最新帖子</strong>
+                <ul>
+                
+                    <li>
+                        <a href="/article/2019-4-7/">PHP协程之路-yield语法糖</a>
+                    </li>
+                
+                    <li>
+                        <a href="/article/3-29/">PHP协程之路-什么是协程</a>
+                    </li>
+                
+                    <li>
+                        <a href="/article/2019-3-23/">并发与并行，阻塞与非阻塞，异步与同步</a>
+                    </li>
+                
+                    <li>
+                        <a href="/article/first_article/">你好世界</a>
+                    </li>
+                
+                </ul>
+        </div>
+        
+
+        
+        <div class="categories">
+            <a href="/categories/"><strong>分类</strong></a>
+                <ul>
+                
+                    <li>
+                        <a href="/categories/%E6%8A%80%E6%9C%AF">技术 (3)</a>
+                    </li>
+                
+                    <li>
+                        <a href="/categories/php">Php (2)</a>
+                    </li>
+                
+                    <li>
+                        <a href="/categories/%E6%8A%80%E6%9C%AF%E6%A6%82%E5%BF%B5">技术概念 (1)</a>
+                    </li>
+                
+                    <li>
+                        <a href="/categories/%E8%87%AA%E8%A8%80%E8%87%AA%E8%AF%AD">自言自语 (1)</a>
+                    </li>
+                
+            </ul>
+        </div>
+        
+
+        <div class="right">
+            
+            <div class="external-profiles">
+                <strong>社交媒体</strong>
+
+                
+                
+                    <a href="https://twitter.com/chenbeng1" target="_blank"><i class="fa fa-twitter-adblock-proof"></i></a>
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                    <a href="https://github.com/mscb402" target="_blank"><i class="fa fa-github"></i></a>
+                
+                
+            </div>
+            
+
+            
+        </div>
+    </div>
+</footer>
+
+
+<div class="credits">
+    <div class="container">
+        <div class="copyright">
+            <a href="https://github.com/mscb402" target="_blank">
+                &copy;
+                
+                    2019
+                
+                by Chen Beng (Jonathan Chen)
+            </a>
+	    
+        </div>
+        <div class="author">
+            <a href="https://github.com/Lednerb/bilberry-hugo-theme" target="_blank">Bilberry Hugo Theme</a>
+        </div>
+    </div>
+</div>
+
+
+        
+
+        
+
+        
+        
+        <script type="text/javascript" src="https://mscb402.github.io/js/externalDependencies.2a3cf2b558bd16302d997f6c20de885831fe6e39f05a054ddede6211a4a78d882081b58973893707bbefb74dc3611b37e66edb04bc5f075f4a198b2d135d96ae.js" integrity="sha512-KjzytVi9FjAtmX9sIN6IWDH&#43;bjnwWgVN3t5iEaSnjYgggbWJc4k3B7vvt03DYRs35m7bBLxfB19KGYstE12Wrg=="></script>
+
+        
+        
+        <script type="text/javascript" src="https://mscb402.github.io/js/theme.4654b7979e5c207ce920e7ee52f8f636b675001c63c1bc659f218ba45ddfb8cf.js" integrity="sha256-RlS3l55cIHzpIOfuUvj2NrZ1ABxjwbxlnyGLpF3fuM8="></script>
+
+        <script>
+            $(".moment").each(function() {
+                $(this).text(
+                    moment( $(this).text() )
+                        .locale( "zh-cn" )
+                        .format('LL')
+                );
+            });
+
+            $(".footnote-return sup").html("【返回】");
+        </script>
+
+        
+            
+        
+
+        
+
+
+    </body>
+</html>
