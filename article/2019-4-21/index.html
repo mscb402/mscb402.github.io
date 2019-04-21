@@ -154,7 +154,7 @@
 }
 function test2(){
     yield 'a';
-		yield 'b'
+		yield 'b';
     yield 'c';
 }
 </code></pre>
@@ -168,7 +168,7 @@ function test2(){
 <pre><code class="language-php">function test2(){
     yield 'a';
   	yield test();
-		yield 'b'
+		yield 'b';
     yield 'c';
 }
 </code></pre>
@@ -201,7 +201,7 @@ string(1) &quot;c&quot;
 
 <p>我们仔细分析一下，发现我们需要的打印的“1，2，3”是在第2个生成器里面。所以我们还需要遍历一次生成器才行。</p>
 
-<p>再改改我们的调用代码，看起来就想下面这个样子</p>
+<p>再改改我们的调用代码，看起来就像下面这个样子</p>
 
 <pre><code class="language-php">$gen = test2();
 foreach($gen as $g){
@@ -215,7 +215,7 @@ foreach($gen as $g){
 }
 </code></pre>
 
-<p>允许一下试试，输出 <code>a 1 2 3 b c</code>。成功了！</p>
+<p>运行一下试试，输出 <code>a 1 2 3 b c</code>。成功了！</p>
 
 <p>但是，你发现问题了没有？从某种意义上，我们现在的生成器调用，从一维跳到了二维。复杂度极具增加。</p>
 
@@ -248,7 +248,7 @@ foreach($gen as $g){
 <pre><code class="language-php">function test2(){
     yield 'a';
   	yield from test();
-		yield 'b'
+		yield 'b';
     yield 'c';
 }
 </code></pre>
@@ -323,7 +323,7 @@ foreach($gen as $g){
   $p = [];
   foreach($urls as $url){
     $g = get_http_content($url);
-		$g-&gt;current();//get_http_content会执行到第一个yield，并暂停
+    $g-&gt;current();//get_http_content会执行到第一个yield，并暂停
     
     $p[] = [
       &quot;url&quot;=&gt; $url,
@@ -373,7 +373,7 @@ Content:XXXXXX
 
 <p>如果你仔细看上面的代码，你会发现我们所谓的协程也太Low了，居然为了能同时发出多个请求，不惜在<code>get_http_content()</code>函数里使用<code>while</code>死循环来检查完成状态，确实解决了一个小的问题，却引入了一个更加大的问题，我们用协程的初衷不就是为了能最大化的利用CPU，让CPU能合理执行我们需要的代码流，结果我们直接把CPU变得更加没有效率了。</p>
 
-<p>所以接下来我们要利用各种方法去解决这些问题，文章还未结束，继续前进，敬请期待。</p>
+<p>所以接下来我们要利用各种方法去解决这些问题，系列文章还未结束，继续前进，敬请期待。</p>
 
 <hr />
 

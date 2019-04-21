@@ -147,7 +147,7 @@
 但是，仅仅只有一个yield还是不够。这篇文章我们就来看看，从PHP 7 开始提供的yield from语法。
 yield的局限性 假设我们现在有一个需求，希望有2个函数，一个顺序yield1,2,3，另一个函数顺序yielda,b,c。
 如下：
-function test(){ yield '1'; yield '2'; yield '3'; } function test2(){ yield 'a'; yield 'b' yield 'c'; }  然后，现在要打算，调用test2()，最终的yield输出是1,a,b,c,2,3。
+function test(){ yield '1'; yield '2'; yield '3'; } function test2(){ yield 'a'; yield 'b'; yield 'c'; }  然后，现在要打算，调用test2()，最终的yield输出是1,a,b,c,2,3。
 
         
             <a href="/article/2019-4-21/" class="more">继续阅读</a>
