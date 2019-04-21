@@ -1,0 +1,556 @@
+<!doctype html>
+<html class="no-js" lang="zh-cn">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="author" content="Jonathan Chen">
+        <meta name="description" content="Keep curious!">
+        <meta name="keywords" content="blog, technology, python, pythonista, programming, developer, software developer, software engineer, azure, cloud, cloud computing, testing, clean code">
+        <meta name="generator" content="Hugo 0.54.0" />
+        <title> PHP协程之路-yield from和协程初步 | Jonathan Chen&#39;s Blog</title>
+        <meta name="description" content="PHP协程之路-yield from和协程初步 - Keep curious!">
+        <meta itemprop="name" content="PHP协程之路-yield from和协程初步">
+        <meta itemprop="description" content="PHP协程之路-yield from和协程初步 - Keep curious!">
+        <meta property="og:title" content="PHP协程之路-yield from和协程初步">
+        <meta property="og:description" content="PHP协程之路-yield from和协程初步 - Keep curious!">
+        <meta property="og:image" content="https://www.gravatar.com/avatar/73e7f10f7883ff287d4571c4c190fd93?size=200">
+        <meta property="og:url" content="https://mscb402.github.io/article/2019-4-21/">
+        <meta property="og:site_name" content="Jonathan Chen&#39;s Blog">
+        <meta property="og:type" content="article">
+        <link rel="icon" type="image/png" href="https://mscb402.github.io/favicon-32x32.png" sizes="32x32">
+        <link rel="icon" type="image/png" href="https://mscb402.github.io/favicon-16x16.png" sizes="16x16">
+
+	
+
+        
+        <link rel="stylesheet" href="https://mscb402.github.io/sass/theme.min.7f4b7ce40e75c56b2479c669b6e33cd1381e870b71fcf495203cc50ba0259faa.css">
+
+        
+
+        
+            
+        
+    </head>
+    <body class="bilberry-hugo-theme">
+        
+<nav>
+
+    <div class="container">
+        <ul class="topnav">
+            
+                
+                    <li><a href="https://github.com/mscb402" target="_blank">Github</a></li>
+                
+            
+                
+                    <li><a href="/page/about/">关于我</a></li>
+                
+            
+        </ul>
+
+        
+    </div>
+</nav>
+
+
+        <header>
+    <div class="container">
+        <div class="logo">
+            <a href="/page/about/" class="logo">
+                
+                    <img src="https://www.gravatar.com/avatar/73e7f10f7883ff287d4571c4c190fd93?d=mm&size=200" alt="">
+                
+
+                <span class="overlay"><i class="fa fa-home"></i></span>
+            </a>
+        </div>
+        <div class="titles">
+            <h3 class="title"><a href="/">Jonathan Chen&#39;s Blog</a>
+            </h3>
+            
+                <span class="subtitle">Keep curious!</span>
+            
+            <h3 class="title">
+                <div class="social-media">
+                    
+                        <a href="https://twitter.com/chenbeng1" target="_blank"><i class="fa fa-twitter"></i></a>
+                    
+                    
+                        <a href="https://github.com/mscb402" target="_blank"><i class="fa fa-github"></i></a>
+                    
+                    
+                    
+                    
+                </div>
+            </h3>
+        </div>
+
+    
+
+        
+        <div class="toggler">
+        
+            <i class="fa fa-bars" aria-hidden="true"></i>
+        </div>
+    </div>
+</header>
+
+
+        <div class="main container">
+            
+     
+    <div class="article-wrapper u-cf single">
+        
+            <a class="bubble" href="/article/2019-4-21/">
+    <i class="fa fa-fw fa-pencil"></i>
+</a>
+
+<article class="default article">
+    
+
+    <div class="content">
+    <h3><a href="/article/2019-4-21/">PHP协程之路-yield from和协程初步</a></h3>
+    <div class="meta">
+        
+            
+                <span class="date moment">2019-04-21</span>
+            
+        
+
+        
+
+        
+            <span class="categories">
+                
+                    <a href="/categories/%E6%8A%80%E6%9C%AF%E6%A6%82%E5%BF%B5">技术概念</a>
+                
+                    <a href="/categories/%E6%8A%80%E6%9C%AF">技术</a>
+                
+            </span>
+        
+
+        
+            <span class="author"><a href="/author/jonathan-chen">Jonathan Chen</a></span>
+        
+    </div>
+
+    
+        
+
+<p>上一篇文章我们谈了，PHP的一个yield语法糖。这个语法糖已经基本满足协程的必要条件了。</p>
+
+<p>但是，仅仅只有一个yield还是不够。这篇文章我们就来看看，从PHP 7 开始提供的<code>yield from</code>语法。</p>
+
+<h2 id="yield的局限性">yield的局限性</h2>
+
+<p>假设我们现在有一个需求，希望有2个函数，一个顺序yield<code>1,2,3</code>，另一个函数顺序yield<code>a,b,c</code>。</p>
+
+<p>如下：</p>
+
+<pre><code class="language-php">function test(){
+    yield '1';
+    yield '2';
+    yield '3';
+}
+function test2(){
+    yield 'a';
+		yield 'b'
+    yield 'c';
+}
+</code></pre>
+
+<p>然后，现在要打算，调用<code>test2()</code>，最终的yield输出是<code>1,a,b,c,2,3</code>。</p>
+
+<p>那该如何更改呢？</p>
+
+<p>改成如下的样子呢？</p>
+
+<pre><code class="language-php">function test2(){
+    yield 'a';
+  	yield test();
+		yield 'b'
+    yield 'c';
+}
+</code></pre>
+
+<p>先不关心对错，我们写一个调用，把他先跑起来再说。调用的代码如下</p>
+
+<pre><code class="language-php">$gen = test2();
+foreach($gen as $g){
+    echo $g;
+}
+</code></pre>
+
+<p>看看输出的结果：</p>
+
+<pre><code>a&lt;br /&gt; &lt;b&gt;Recoverable fatal error&lt;/b&gt;: Object of class Generator could not be converted to string in &lt;b&gt;[...][...]&lt;/b&gt; on line &lt;b&gt;17&lt;/b&gt;&lt;br /&gt; 
+</code></pre>
+
+<p>出错误了,别着急，我们把<code>echo $g;</code>改成<code>var_dump($g);</code>再试试看。</p>
+
+<pre><code>string(1) &quot;a&quot;
+object(Generator)#3 (0) {
+}
+string(1) &quot;b&quot;
+string(1) &quot;c&quot;
+</code></pre>
+
+<p>原来，在输出第二个的时候，函数返回的是一个生成器，而生成器无法用echo语句打印出来。所以出错了。</p>
+
+<p>OK，函数是可以正常跑起来，但是还是没完成我们需要的功能。</p>
+
+<p>我们仔细分析一下，发现我们需要的打印的“1，2，3”是在第2个生成器里面。所以我们还需要遍历一次生成器才行。</p>
+
+<p>再改改我们的调用代码，看起来就想下面这个样子</p>
+
+<pre><code class="language-php">$gen = test2();
+foreach($gen as $g){
+    if($g instanceof Generator){
+        foreach($g as $g2){ 
+          echo $g2; 
+        }
+    }else{
+        echo $g;
+    }
+}
+</code></pre>
+
+<p>允许一下试试，输出 <code>a 1 2 3 b c</code>。成功了！</p>
+
+<p>但是，你发现问题了没有？从某种意义上，我们现在的生成器调用，从一维跳到了二维。复杂度极具增加。</p>
+
+<p>如果我们在<code>test()</code>函数里还内嵌了一个<code>test3()</code>生成器，然后<code>test3()</code>里还内嵌了一个<code>test4()</code>的生成器。</p>
+
+<p>这复杂度简直是要爆炸了。一层一层的内嵌。</p>
+
+<p>当然这也不是无解，稍微优化代码结构还是能看的，设计模式什么的就是用来解决这些问题。</p>
+
+<p>上面说局限性，其实不是yield缺点。这是yield的一个feature，有它自己的适用范围。只是如果当当就一个yield语法，用起来有点累。</p>
+
+<h2 id="yield-from-语法">yield from 语法</h2>
+
+<p>前面也说了，yield from是从PHP 7 开始提供的。所以如果是低版本的PHP，那就没法用这个方法。实际上我实在无法理解现阶段还在用PHP 7 以下的版本的。如果是python2和python3还能理解，PHP7并没啥太大的兼容性问题，PHP 5的程序放到PHP7里一样能运行。而且速度更快，官方花这么大力气为你节省机器资源，何乐而不为呢？</p>
+
+<p>跑题了，再圆回来。</p>
+
+<p>对于<code>yield from</code>官方的定义如下：</p>
+
+<blockquote>
+<p>In PHP 7, generator delegation allows you to yield values from another generator, Traversable object, or array by using the <strong>yield from</strong> keyword. The outer generator will then yield all values from the inner generator, object, or array until that is no longer valid, after which execution will continue in the outer generator.</p>
+
+<p>If a generator is used with <strong>yield from</strong>, the <strong>yield from</strong> expression will also return any value returned by the inner generator.</p>
+</blockquote>
+
+<p>Yield from 语法糖，最主要的就是记住它是&rdquo;delegation（委托）“。使用这个语法，就相当于把当前的执行流转移到内部的生成器里面。让内部生成器的yield语句，能直接穿过上层，直达顶部。</p>
+
+<p>也就是说，上面的例子中，test2如果像下面这样写。</p>
+
+<pre><code class="language-php">function test2(){
+    yield 'a';
+  	yield from test();
+		yield 'b'
+    yield 'c';
+}
+</code></pre>
+
+<p>代码收到的yield分别是：<code>a 1 2 3 b c</code></p>
+
+<p>可以看到，代码的执行流跳到test里面了，就和普通的函数调用一样。</p>
+
+<p>既然代码的执行流已经变成顺序了，那生成器的迭代就自然而然的变成一维度的了。如下</p>
+
+<pre><code class="language-php">$gen = test2();
+foreach($gen as $g){
+    echo $g;
+}
+</code></pre>
+
+<p>是不是简单了很多呢？</p>
+
+<p>这有助于我们写出更加清晰的代码，这就是我们需要用到这个函数的原因。</p>
+
+<h2 id="协程初步">协程初步</h2>
+
+<p>终于，我们介绍完了这2个重要的语法糖了。接下来我们利用这个语法糖，初步的了解协程。</p>
+
+<blockquote>
+<p>需求：</p>
+
+<p>现在我们希望实现一个批量爬取URL的内容，并输出的功能。</p>
+</blockquote>
+
+<p>用普通的写法，代码是同步阻塞的，实现起来可能会像这样</p>
+
+<pre><code class="language-php">foreach($urls as $url){
+     echo download_url($url); //下载URL内容，并显示
+}
+</code></pre>
+
+<p>如果$urls里面有10个URL，每个URL请求要5秒，那等代码执行完，就要花50s。这显然太浪费资源了，白白放着这么多电脑资源不使用。</p>
+
+<p>如何优化呢？</p>
+
+<p>还记得前面几篇文章我们说过的，这种IO密集性的特性特别适合用协程来解决。</p>
+
+<p>我们知道，时间大部分都是浪费阻塞在那里，阻塞的原因是在等待网络请求。而等待的时间太长，这段时间啥都不能干，太浪费了。所以我们要用非阻塞的接口去做网络请求。这样不管请求成功与否，控制权都能返回到原来的代码流。让我们可以在短时间内再发几个请求出去。而不是等请求完成以后才发第二个请求出去。</p>
+
+<p>有了实现思路，我们再来实现一下。为了文章简介，我还是不细究具体的HTTP请求细节，用一个自定义函数代替。</p>
+
+<p>假设我们有一个自己写的 <code>get_http_content($url)</code>函数负责非阻塞的获取URL上的内容。</p>
+
+<pre><code class="language-php">function get_http_content($url){
+  //读取$url内容
+  $hp = http_get($url);
+  //暂停程序
+  yield;
+  //循环检查是否获取数据完成
+  while( !http_is_finished($hp) ){
+    //未完成就一直等等
+  }
+  //一旦完成，返回$content
+  $content = http_getContent($hp);
+  return $content;
+}
+</code></pre>
+
+<p>这里我们<code>http_get</code>就当作是一个可以获取http请求的函数，然后可以通过函数<code>http_is_finished</code>获取状态，一旦状态设置为OK，那就返回内容。</p>
+
+<p>通过上面我们就能知道，http_get是一个非阻塞函数，不会阻塞接下来的代码执行流。</p>
+
+<p>现在我们，用一个函数<code>send_request_all</code>同时发出去请求。</p>
+
+<pre><code class="language-php">function send_request_all($urls){
+  $p = [];
+  foreach($urls as $url){
+    $g = get_http_content($url);
+		$g-&gt;current();//get_http_content会执行到第一个yield，并暂停
+    
+    $p[] = [
+      &quot;url&quot;=&gt; $url,
+      &quot;content&quot;=&gt; $g,
+      &quot;finished&quot;=&gt;false
+    ];
+  }
+  return $p;
+}
+
+</code></pre>
+
+<p>协程都建立好了，接下来再写一个函数，依次读取出来。</p>
+
+<pre><code class="language-php">function read_request_all($p){
+  foreach($p as $one_p){
+    //get_http_content的return会传给父生成器
+    $content = yield from $one_p['content']; 
+    echo 'URL:'.$one_p['url'].&quot;\nContent:&quot;.$content;
+  }
+}
+</code></pre>
+
+<p>最后，我们只要调用<code>read_request_all</code>函数，就能实现打印所有的内容。</p>
+
+<p>可是由于这个函数它本身是一个生成器，所以不能直接调用，还是得用生成器的调用例子去调用。</p>
+
+<p>最终调用代码如下：</p>
+
+<pre><code class="language-php">$p = send_request_all(['http://google.com','http://github.com','http://youtube.com']);
+read_request_all($p);
+</code></pre>
+
+<p>然后输出的结果差不多是这样的。</p>
+
+<pre><code>URL:http://google.com
+Content:XXXXXX
+
+URL:http://github.com
+Content:XXXXXX
+
+URL:http://youtube.com
+Content:XXXXXX
+</code></pre>
+
+<h2 id="结尾">结尾</h2>
+
+<p>如果你仔细看上面的代码，你会发现我们所谓的协程也太Low了，居然为了能同时发出多个请求，不惜在<code>get_http_content()</code>函数里使用<code>while</code>死循环来检查完成状态，确实解决了一个小的问题，却引入了一个更加大的问题，我们用协程的初衷不就是为了能最大化的利用CPU，让CPU能合理执行我们需要的代码流，结果我们直接把CPU变得更加没有效率了。</p>
+
+<p>所以接下来我们要利用各种方法去解决这些问题，文章还未结束，继续前进，敬请期待。</p>
+
+<hr />
+
+<p><em>注意：本文未经许可，不得转载</em></p>
+
+    
+</div>
+
+    
+<div class="footer">
+
+
+    
+        <div class="tags">
+            <i class="fa fa-tags"></i>
+            <div class="links">
+                
+                    <a href="/tags/%E5%B9%B6%E5%8F%91">并发</a>
+                
+                    <a href="/tags/%E5%B9%B6%E8%A1%8C">并行</a>
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+</article>
+
+        
+    </div>
+
+    
+        
+    
+
+     
+
+        </div>
+
+        
+<footer>
+    <div class="container">
+
+        
+        <div class="recent-posts">
+            <strong>最新帖子</strong>
+                <ul>
+                
+                    <li>
+                        <a href="/article/2019-4-21/">PHP协程之路-yield from和协程初步</a>
+                    </li>
+                
+                    <li>
+                        <a href="/article/2019-4-7/">PHP协程之路-yield语法糖</a>
+                    </li>
+                
+                    <li>
+                        <a href="/article/3-29/">PHP协程之路-什么是协程</a>
+                    </li>
+                
+                    <li>
+                        <a href="/article/2019-3-23/">并发与并行，阻塞与非阻塞，异步与同步</a>
+                    </li>
+                
+                    <li>
+                        <a href="/article/first_article/">你好世界</a>
+                    </li>
+                
+                </ul>
+        </div>
+        
+
+        
+        <div class="categories">
+            <a href="/categories/"><strong>分类</strong></a>
+                <ul>
+                
+                    <li>
+                        <a href="/categories/%E6%8A%80%E6%9C%AF">技术 (4)</a>
+                    </li>
+                
+                    <li>
+                        <a href="/categories/php">Php (2)</a>
+                    </li>
+                
+                    <li>
+                        <a href="/categories/%E6%8A%80%E6%9C%AF%E6%A6%82%E5%BF%B5">技术概念 (2)</a>
+                    </li>
+                
+                    <li>
+                        <a href="/categories/%E8%87%AA%E8%A8%80%E8%87%AA%E8%AF%AD">自言自语 (1)</a>
+                    </li>
+                
+            </ul>
+        </div>
+        
+
+        <div class="right">
+            
+            <div class="external-profiles">
+                <strong>社交媒体</strong>
+
+                
+                
+                    <a href="https://twitter.com/chenbeng1" target="_blank"><i class="fa fa-twitter-adblock-proof"></i></a>
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                    <a href="https://github.com/mscb402" target="_blank"><i class="fa fa-github"></i></a>
+                
+                
+            </div>
+            
+
+            
+        </div>
+    </div>
+</footer>
+
+
+<div class="credits">
+    <div class="container">
+        <div class="copyright">
+            <a href="https://github.com/mscb402" target="_blank">
+                &copy;
+                
+                    2019
+                
+                by Chen Beng (Jonathan Chen)
+            </a>
+	    
+        </div>
+        <div class="author">
+            <a href="https://github.com/Lednerb/bilberry-hugo-theme" target="_blank">Bilberry Hugo Theme</a>
+        </div>
+    </div>
+</div>
+
+
+        
+
+        
+
+        
+        
+        <script type="text/javascript" src="https://mscb402.github.io/js/externalDependencies.2a3cf2b558bd16302d997f6c20de885831fe6e39f05a054ddede6211a4a78d882081b58973893707bbefb74dc3611b37e66edb04bc5f075f4a198b2d135d96ae.js" integrity="sha512-KjzytVi9FjAtmX9sIN6IWDH&#43;bjnwWgVN3t5iEaSnjYgggbWJc4k3B7vvt03DYRs35m7bBLxfB19KGYstE12Wrg=="></script>
+
+        
+        
+        <script type="text/javascript" src="https://mscb402.github.io/js/theme.4654b7979e5c207ce920e7ee52f8f636b675001c63c1bc659f218ba45ddfb8cf.js" integrity="sha256-RlS3l55cIHzpIOfuUvj2NrZ1ABxjwbxlnyGLpF3fuM8="></script>
+
+        <script>
+            $(".moment").each(function() {
+                $(this).text(
+                    moment( $(this).text() )
+                        .locale( "zh-cn" )
+                        .format('LL')
+                );
+            });
+
+            $(".footnote-return sup").html("【返回】");
+        </script>
+
+        
+            
+        
+
+        
+
+
+    </body>
+</html>

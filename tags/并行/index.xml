@@ -5,10 +5,23 @@
     <link>https://mscb402.github.io/tags/%E5%B9%B6%E8%A1%8C/</link>
     <description>Recent content in 并行 on Jonathan Chen&#39;s Blog</description>
     <generator>Hugo -- gohugo.io</generator>
-    <lastBuildDate>Sat, 23 Mar 2019 14:42:22 +0800</lastBuildDate>
+    <lastBuildDate>Sun, 21 Apr 2019 12:42:45 +0800</lastBuildDate>
     
 	<atom:link href="https://mscb402.github.io/tags/%E5%B9%B6%E8%A1%8C/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>PHP协程之路-yield from和协程初步</title>
+      <link>https://mscb402.github.io/article/2019-4-21/</link>
+      <pubDate>Sun, 21 Apr 2019 12:42:45 +0800</pubDate>
+      
+      <guid>https://mscb402.github.io/article/2019-4-21/</guid>
+      <description>上一篇文章我们谈了，PHP的一个yield语法糖。这个语法糖已经基本满足协程的必要条件了。
+但是，仅仅只有一个yield还是不够。这篇文章我们就来看看，从PHP 7 开始提供的yield from语法。
+yield的局限性 假设我们现在有一个需求，希望有2个函数，一个顺序yield1,2,3，另一个函数顺序yielda,b,c。
+如下：
+function test(){ yield &#39;1&#39;; yield &#39;2&#39;; yield &#39;3&#39;; } function test2(){ yield &#39;a&#39;; yield &#39;b&#39; yield &#39;c&#39;; }  然后，现在要打算，调用test2()，最终的yield输出是1,a,b,c,2,3。</description>
+    </item>
     
     <item>
       <title>并发与并行，阻塞与非阻塞，异步与同步</title>

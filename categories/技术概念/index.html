@@ -104,6 +104,79 @@
     
         <div class="article-wrapper u-cf">
             
+                <a class="bubble" href="/article/2019-4-21/">
+    <i class="fa fa-fw fa-pencil"></i>
+</a>
+
+<article class="default article">
+    
+
+    <div class="content">
+    <h3><a href="/article/2019-4-21/">PHP协程之路-yield from和协程初步</a></h3>
+    <div class="meta">
+        
+            
+                <span class="date moment">2019-04-21</span>
+            
+        
+
+        
+
+        
+            <span class="categories">
+                
+                    <a href="/categories/%E6%8A%80%E6%9C%AF%E6%A6%82%E5%BF%B5">技术概念</a>
+                
+                    <a href="/categories/%E6%8A%80%E6%9C%AF">技术</a>
+                
+            </span>
+        
+
+        
+            <span class="author"><a href="/author/jonathan-chen">Jonathan Chen</a></span>
+        
+    </div>
+
+    
+        上一篇文章我们谈了，PHP的一个yield语法糖。这个语法糖已经基本满足协程的必要条件了。
+但是，仅仅只有一个yield还是不够。这篇文章我们就来看看，从PHP 7 开始提供的yield from语法。
+yield的局限性 假设我们现在有一个需求，希望有2个函数，一个顺序yield1,2,3，另一个函数顺序yielda,b,c。
+如下：
+function test(){ yield '1'; yield '2'; yield '3'; } function test2(){ yield 'a'; yield 'b' yield 'c'; }  然后，现在要打算，调用test2()，最终的yield输出是1,a,b,c,2,3。
+
+        
+            <a href="/article/2019-4-21/" class="more">继续阅读</a>
+        
+    
+</div>
+
+    
+<div class="footer">
+
+
+    
+        <div class="tags">
+            <i class="fa fa-tags"></i>
+            <div class="links">
+                
+                    <a href="/tags/%E5%B9%B6%E5%8F%91">并发</a>
+                
+                    <a href="/tags/%E5%B9%B6%E8%A1%8C">并行</a>
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+</article>
+
+            
+        </div>
+    
+        <div class="article-wrapper u-cf">
+            
                 <a class="bubble" href="/article/2019-3-23/">
     <i class="fa fa-fw fa-pencil"></i>
 </a>
@@ -201,6 +274,10 @@
                 <ul>
                 
                     <li>
+                        <a href="/article/2019-4-21/">PHP协程之路-yield from和协程初步</a>
+                    </li>
+                
+                    <li>
                         <a href="/article/2019-4-7/">PHP协程之路-yield语法糖</a>
                     </li>
                 
@@ -226,7 +303,7 @@
                 <ul>
                 
                     <li>
-                        <a href="/categories/%E6%8A%80%E6%9C%AF">技术 (3)</a>
+                        <a href="/categories/%E6%8A%80%E6%9C%AF">技术 (4)</a>
                     </li>
                 
                     <li>
@@ -234,7 +311,7 @@
                     </li>
                 
                     <li>
-                        <a href="/categories/%E6%8A%80%E6%9C%AF%E6%A6%82%E5%BF%B5">技术概念 (1)</a>
+                        <a href="/categories/%E6%8A%80%E6%9C%AF%E6%A6%82%E5%BF%B5">技术概念 (2)</a>
                     </li>
                 
                     <li>
