@@ -18,8 +18,7 @@
       <guid>https://mscb402.github.io/article/2019-5-1/</guid>
       <description>经过前面几篇文章，我们的协程终点站马上就要呼之欲出了。但是在到达终点站之前，我们还是需要了解另外一个简单的概念。
 这个概念就是我们文章标题的里的“Event Loop”，这是一种流程控制的一种模式。其实非常简单，我们平常编程的时候经常会用到它，只是你可能没有了解过这个东西的名字而已。
-##Event Loop
-我们先来看看wiki上对event loop的介绍
+Event Loop 我们先来看看wiki上对event loop的介绍
  In computer science, the event loop, message dispatcher, message loop, message pump, or run loop is a programming construct that waits for and dispatches events or messages in a program.</description>
     </item>
     
