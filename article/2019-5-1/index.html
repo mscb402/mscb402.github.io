@@ -7,21 +7,19 @@
         <meta name="description" content="Keep curious!">
         <meta name="keywords" content="blog, technology, python, pythonista, programming, developer, software developer, software engineer, azure, cloud, cloud computing, testing, clean code">
         <meta name="generator" content="Hugo 0.54.0" />
-        <title> 并发 | Jonathan Chen&#39;s Blog</title>
-        <meta name="description" content="并发 - Keep curious!">
-        <meta itemprop="name" content="并发">
-        <meta itemprop="description" content="并发 - Keep curious!">
-        <meta property="og:title" content="并发">
-        <meta property="og:description" content="并发 - Keep curious!">
+        <title> PHP协程之路-事件循环Event Loop | Jonathan Chen&#39;s Blog</title>
+        <meta name="description" content="PHP协程之路-事件循环Event Loop - Keep curious!">
+        <meta itemprop="name" content="PHP协程之路-事件循环Event Loop">
+        <meta itemprop="description" content="PHP协程之路-事件循环Event Loop - Keep curious!">
+        <meta property="og:title" content="PHP协程之路-事件循环Event Loop">
+        <meta property="og:description" content="PHP协程之路-事件循环Event Loop - Keep curious!">
         <meta property="og:image" content="https://www.gravatar.com/avatar/73e7f10f7883ff287d4571c4c190fd93?size=200">
-        <meta property="og:url" content="https://mscb402.github.io/tags/%E5%B9%B6%E5%8F%91/">
-        <meta property="og:site_name" content="Jonathan Chen&#39;s Blog"><meta property="og:type" content="website">
+        <meta property="og:url" content="https://mscb402.github.io/article/2019-5-1/">
+        <meta property="og:site_name" content="Jonathan Chen&#39;s Blog">
+        <meta property="og:type" content="article">
         <link rel="icon" type="image/png" href="https://mscb402.github.io/favicon-32x32.png" sizes="32x32">
         <link rel="icon" type="image/png" href="https://mscb402.github.io/favicon-16x16.png" sizes="16x16">
 
-	
-	  <link href="https://mscb402.github.io/tags/%E5%B9%B6%E5%8F%91/index.xml" rel="alternate" type="application/rss+xml" title="Jonathan Chen&#39;s Blog" />
-	  <link href="https://mscb402.github.io/tags/%E5%B9%B6%E5%8F%91/index.xml" rel="feed" type="application/rss+xml" title="Jonathan Chen&#39;s Blog" />
 	
 
         
@@ -100,11 +98,10 @@
 
         <div class="main container">
             
-    
-    
-        <div class="article-wrapper u-cf">
-            
-                <a class="bubble" href="/article/2019-5-1/">
+     
+    <div class="article-wrapper u-cf single">
+        
+            <a class="bubble" href="/article/2019-5-1/">
     <i class="fa fa-fw fa-pencil"></i>
 </a>
 
@@ -138,15 +135,145 @@
     </div>
 
     
-        经过前面几篇文章，我们的协程终点站马上就要呼之欲出了。但是在到达终点站之前，我们还是需要了解另外一个简单的概念。
-这个概念就是我们文章标题的里的“Event Loop”，这是一种流程控制的一种模式。其实非常简单，我们平常编程的时候经常会用到它，只是你可能没有了解过这个东西的名字而已。
-##Event Loop
-我们先来看看wiki上对event loop的介绍
- In computer science, the event loop, message dispatcher, message loop, message pump, or run loop is a programming construct that waits for and dispatches events or messages in a program.
+        
 
-        
-            <a href="/article/2019-5-1/" class="more">继续阅读</a>
-        
+<p>经过前面几篇文章，我们的协程终点站马上就要呼之欲出了。但是在到达终点站之前，我们还是需要了解另外一个简单的概念。</p>
+
+<p>这个概念就是我们文章标题的里的“Event Loop”，这是一种流程控制的一种模式。其实非常简单，我们平常编程的时候经常会用到它，只是你可能没有了解过这个东西的名字而已。</p>
+
+<p>##Event Loop</p>
+
+<p>我们先来看看wiki上对event loop的介绍</p>
+
+<blockquote>
+<p>In computer science, the event loop, message dispatcher, message loop, message pump, or run loop is a programming construct that waits for and dispatches events or messages in a program. It works by making a request to some internal or external &ldquo;event provider&rdquo; (that generally blocks the request until an event has arrived), and then it calls the relevant event handler (&ldquo;dispatches the event&rdquo;). The event-loop may be used in conjunction with a reactor, if the event provider follows the file interface, which can be selected or &lsquo;polled&rsquo; (the Unix system call, not actual polling). The event loop almost always operates asynchronously with the message originator.</p>
+
+<p>When the event loop forms the central control flow construct of a program, as it often does, it may be termed the main loop or main event loop. This title is appropriate, because such an event loop is at the highest level of control within the program.</p>
+</blockquote>
+
+<p>其实事件循环，就是一个消息分发机制。更形象的说就是轮询。只不过轮询的是消息。</p>
+
+<p>事件轮询器，通过不断的轮询消息，然后根据消息的种类对消息进行分发、</p>
+
+<p>如果你了解过用户界面的开发，你应该就知道这个。比如当用户点击一下某个按钮，程序会发送一个“点击事件”的消息，然后事件轮询器获取到消息，并调用对应的函数进行事件处理。</p>
+
+<p>总之，事件循环，这是一个在很多场景下都可以使用的“方法论”。如果你的项目需要事件交互，那基本上都用得上事件循环。</p>
+
+<p>在我们这系列文章里面，我们主要利用事件循环来做协程的调度工作。</p>
+
+<h2 id="调度器的实现">调度器的实现</h2>
+
+<p>需要实现的功能：</p>
+
+<p>一个简单的调度器，会不断的调用函数，一旦某个函数返回true，则把该函数移出调度队列，反之继续调度。</p>
+
+<p>我们先剖析一点基本元素，首先需要一个事件函数记录队列，我这里比较懒惰，就直接用PHP的数组来做队列了，记住这不是一个好注意，最好用链表来做队列比较好。我把这个队列取名叫<code>$events</code>很直白，就是事件的复数。</p>
+
+<p>然后当然还要有一个函数对队列里的事件进行添加。</p>
+
+<p>接着就是我们的重头戏，event loop了，我这里取名为mainLoop。</p>
+
+<p>把他们打包成一个类，如下的代码一样。</p>
+
+<pre><code class="language-php">class EventLoop{
+    public $events = [];
+    public function addEvent($e){
+        $this-&gt;events[] = $e;
+    }
+    public function mainLoop(){
+        while(count($this-&gt;events) &gt; 0){
+            $len = count($this-&gt;events);
+            for($i=0;$i&lt;$len;$i++){
+                $e = $this-&gt;events[$i];
+                $ret = $e();
+                if(!$ret){
+                    continue;
+                }
+                unset($this-&gt;events[$i]);
+            }
+            $this-&gt;events = array_values($this-&gt;events);
+        }
+    }
+}
+
+</code></pre>
+
+<p>简单解释一下mainloop里面的代码，首先是一个while循环，使用events队列的元素个数作为循环判定条件。如果队列里面的元素为空（说明任务都执行完成了，无需继续执行），则退出循环。</p>
+
+<p>接着，用一个for循环，遍历出所有事件，这里不建议用foreach，因为我们在途中可能会删除掉某个元素，所以用foreach可能会产生一些无法预料的未知错误。</p>
+
+<p>依次执行队列里元素（这些元素分别是一个个函数），判定元素的返回值，如果返回true，则表示执行成功，通过<code>unset</code>命令删除该元素。</p>
+
+<p>可能你会注意到在for循环以后，还有一个<code>$this-&gt;events = array_values($this-&gt;events);</code>的代码。</p>
+
+<p>这句话的意思是重新规划数组的索引，原因是通过unset命令删除掉某个元素，会在数组内留下一个空位，接下来如果用for循环就会出错误。比如说PHP数组<code>['a','b','c']</code>，在PHP内存里是这个样子的<code>{0:'a',1:'b',2:'c'}</code>，一旦unset掉$arr[1]也就是说把‘b’删除掉，那最后的样子是这样的<code>{0:'a',2:'c'}</code>，下一次我们再用for i++就会出现i为1的时候无法获取到对应的元素，导致错误。</p>
+
+<p>这也就是为什么不建议用数组的原因之一，这句话的解决是对我用数组的解决方案，如果你用的是链表，那无需理会。</p>
+
+<p>OK，一个简单的调度程序写出来了，我们来调用试试看</p>
+
+<pre><code class="language-php">$el = new EventLoop();
+$el-&gt;addEvent(function(){
+    echo &quot;Run 1\n&quot;;
+    return true;
+});
+$el-&gt;addEvent(function(){
+    echo &quot;Run 2\n&quot;;
+    $rand = mt_rand(0,100);
+    if($rand &gt; 10){
+        return false;
+    }
+    return true;
+});
+$el-&gt;addEvent(function(){
+    echo &quot;Run 3\n&quot;;
+    return true;
+});
+
+$el-&gt;mainLoop();
+</code></pre>
+
+<p>简单分析一下，首先new一个EventLoop对象，然后添加3个函数到队列，最后调用mainLoop继续事件调度。</p>
+
+<p>前后2个函数，很直白，就是运行输出当前任务的名称，然后返回true结束调度。</p>
+
+<p>只有第2个函数有点淘气，它先会输出当前的任务名称，然后生成一个0到100的随机数，并判定该随机数是否小于等于10，不然就返回false，要求调度器继续调度它。</p>
+
+<p>所以现在这个函数调用起来就比较的“薛定谔”了，因为我们其实不是很清楚到底什么样的随机数会被产生。</p>
+
+<p>我运行了几次，挑一个输出结果来看看</p>
+
+<pre><code>Run 1
+Run 2
+Run 3
+Run 2
+Run 2
+Run 2
+Run 2
+Run 2
+Run 2
+Run 2
+Run 2
+Run 2
+Run 2
+Run 2
+Run 2
+Run 2
+Run 2
+Run 2
+Run 2
+</code></pre>
+
+<p>可以看到，前3次执行的都是我们之前顺序添加的函数，后面一直在执行的就只有名称为2的那个函数了。</p>
+
+<h2 id="总结">总结</h2>
+
+<p>本文只是简单的介绍一下event loop，作为一个本系列的拓展。下一篇文章，我们开始真正的实现协程～</p>
+
+<hr />
+
+<p><em>注意：本文未经许可，不得转载</em></p>
+
     
 </div>
 
@@ -172,168 +299,14 @@
 
 </article>
 
-            
-        </div>
-    
-        <div class="article-wrapper u-cf">
-            
-                <a class="bubble" href="/article/2019-4-21/">
-    <i class="fa fa-fw fa-pencil"></i>
-</a>
-
-<article class="default article">
-    
-
-    <div class="content">
-    <h3><a href="/article/2019-4-21/">PHP协程之路-yield from和协程初步</a></h3>
-    <div class="meta">
-        
-            
-                <span class="date moment">2019-04-21</span>
-            
-        
-
-        
-
-        
-            <span class="categories">
-                
-                    <a href="/categories/%E6%8A%80%E6%9C%AF%E6%A6%82%E5%BF%B5">技术概念</a>
-                
-                    <a href="/categories/%E6%8A%80%E6%9C%AF">技术</a>
-                
-            </span>
-        
-
-        
-            <span class="author"><a href="/author/jonathan-chen">Jonathan Chen</a></span>
         
     </div>
 
     
-        上一篇文章我们谈了，PHP的一个yield语法糖。这个语法糖已经基本满足协程的必要条件了。
-但是，仅仅只有一个yield还是不够。这篇文章我们就来看看，从PHP 7 开始提供的yield from语法。
-yield的局限性 假设我们现在有一个需求，希望有2个函数，一个顺序yield1,2,3，另一个函数顺序yielda,b,c。
-如下：
-function test(){ yield '1'; yield '2'; yield '3'; } function test2(){ yield 'a'; yield 'b'; yield 'c'; }  然后，现在要打算，调用test2()，最终的yield输出是1,a,b,c,2,3。
-
-        
-            <a href="/article/2019-4-21/" class="more">继续阅读</a>
         
     
-</div>
 
-    
-<div class="footer">
-
-
-    
-        <div class="tags">
-            <i class="fa fa-tags"></i>
-            <div class="links">
-                
-                    <a href="/tags/%E5%B9%B6%E5%8F%91">并发</a>
-                
-                    <a href="/tags/%E5%B9%B6%E8%A1%8C">并行</a>
-                
-            </div>
-        </div>
-    
-
-    
-</div>
-
-</article>
-
-            
-        </div>
-    
-        <div class="article-wrapper u-cf">
-            
-                <a class="bubble" href="/article/2019-3-23/">
-    <i class="fa fa-fw fa-pencil"></i>
-</a>
-
-<article class="default article">
-    
-
-    <div class="content">
-    <h3><a href="/article/2019-3-23/">并发与并行，阻塞与非阻塞，异步与同步</a></h3>
-    <div class="meta">
-        
-            
-                <span class="date moment">2019-03-23</span>
-            
-        
-
-        
-
-        
-            <span class="categories">
-                
-                    <a href="/categories/%E6%8A%80%E6%9C%AF%E6%A6%82%E5%BF%B5">技术概念</a>
-                
-                    <a href="/categories/%E6%8A%80%E6%9C%AF">技术</a>
-                
-            </span>
-        
-
-        
-            <span class="author"><a href="/author/jonathan-chen">Jonathan Chen</a></span>
-        
-    </div>
-
-    
-        并发与并行、阻塞与非阻塞、异步与同步，这几个概念在服务端开发过程中非常重要。今天我们来说一说这几个技术的区别。请注意，每一个都应该分开理解，不要把混在一起，因为他们之间有一些交集，如果混在一起理解容易使人混淆。
-并发与并行 并发和并行其实不一样，在中文的语意下，有时候很容易搞不清楚，毕竟都是“并”字打头的。就像我长期无法快速分辨并联和串联一样。听到词以后缓个几秒才能区分并联和串联的区别。不知道这种情况是不是只有我一个人有。
-但是，其实这个东西从英文状态下我们可以很容易的分辨。
-并发的英文是Concurrent，并行的英文是Parallel。
-我们可以看到“并行”这个英文单词Parallel,他可以和“宇宙”（Universe）这个词形成一个“平行宇宙”（Parallel Universe），所谓的平行宇宙就是在同一个时刻下有多重现实，这就符合我们对并行的定义了。
-所以，我们可以从这个词的本意出发来理解并行与并发。
-并行只是在同一个时刻有多程序在同时运行。并发就是在一个时间段里面，有多个程序在执行。
-看起来这句话还是很难理解，其实他们最大区别就在于，一个是在同一时刻，一个是在同一时间段。时刻表示某一个时间的极限。所谓时间段表示在某一个时间范围，比如说一秒钟， 或者说一分钟。而在这个时间段里面，程序并不一定是同时执行的。
-学习过操作系统原理的同学应该都知道，在单核 CPU 里面，不同的程序进程并不是同时在执行，而是有一个叫调度器东西， 在依次执行我们的进程。比如每个进程执行100ms，执行时间到了就切换到下个进程继续执行。而由于 CPU 的运算速度实在太快，所以在我们人的时间观念来看好像是同时执行的一样。而实际上在一秒钟CPU可能已经切换了十多个程序。
-
-        
-            <a href="/article/2019-3-23/" class="more">继续阅读</a>
-        
-    
-</div>
-
-    
-<div class="footer">
-
-
-    
-        <div class="tags">
-            <i class="fa fa-tags"></i>
-            <div class="links">
-                
-                    <a href="/tags/%E5%B9%B6%E5%8F%91">并发</a>
-                
-                    <a href="/tags/%E5%B9%B6%E8%A1%8C">并行</a>
-                
-            </div>
-        </div>
-    
-
-    
-</div>
-
-</article>
-
-            
-        </div>
-    
-
-    
-    <div class="paginator">
-        
-
-        
-    </div>
-
-
+     
 
         </div>
 
@@ -438,8 +411,7 @@ function test(){ yield '1'; yield '2'; yield '3'; } function test2(){ yield 'a';
                 
                 by Chen Beng (Jonathan Chen)
             </a>
-	    -
-		<a href="https://mscb402.github.io/tags/%E5%B9%B6%E5%8F%91/index.xml">RSS</a>
+	    
         </div>
         <div class="author">
             <a href="https://github.com/Lednerb/bilberry-hugo-theme" target="_blank">Bilberry Hugo Theme</a>
