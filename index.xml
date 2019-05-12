@@ -5,10 +5,26 @@
     <link>https://mscb402.github.io/</link>
     <description>Recent content on Jonathan Chen&#39;s Blog</description>
     <generator>Hugo -- gohugo.io</generator>
-    <lastBuildDate>Wed, 01 May 2019 15:20:02 +0800</lastBuildDate>
+    <lastBuildDate>Sun, 12 May 2019 10:35:27 +0800</lastBuildDate>
     
 	<atom:link href="https://mscb402.github.io/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>PHP协程之路-协程实现</title>
+      <link>https://mscb402.github.io/article/2019-5-12/</link>
+      <pubDate>Sun, 12 May 2019 10:35:27 +0800</pubDate>
+      
+      <guid>https://mscb402.github.io/article/2019-5-12/</guid>
+      <description>经过前几篇文章的铺垫，这一篇文章，我们终于要开始运用我们所学的知识，把这个协程写出来了。
+闲话不多说，直接开始。
+调度器的实现 上篇文章我们做了一个简单的调度器，但是那个调度器不是为我们协程准备的。所以这一篇文章，我们用原来的代码改一改。
+双向链表 另外，上一篇文章，我们用数组来存储事件列表。这实在是low了一点，而且也不是一个好的习惯。我们这一篇文章，来尝试用“双向链表”来存储事件列表。
+至于双向链表是啥，我这里就不科普了。这是计算机科学的入门知识，它属于数据结构。如果想详细了解了解，可以看看维基百科 https://zh.wikipedia.org/zh-hans/%E5%8F%8C%E5%90%91%E9%93%BE%E8%A1%A8
+由于PHP是一个比较高层的语言，对直接内存操作不是特别方便。所以我这里不打算使用原生PHP语法去做一个双向链表，而是使用PHP自带的SPL标准库函数SplDoublyLinkedList。它的文档在这里https://www.php.net/manual/zh/class.spldoublylinkedlist.php。
+调用方法类似于
+  SplDoublyLinkedList::add — Add/insert a new value at the specified index SplDoublyLinkedList::bottom — Peeks at the node from the beginning of the doubly linked list SplDoublyLinkedList::__construct — Constructs a new doubly linked list SplDoublyLinkedList::count — Counts the number of elements in the doubly linked list SplDoublyLinkedList::current — Return current array entry SplDoublyLinkedList::getIteratorMode — Returns the mode of iteration SplDoublyLinkedList::isEmpty — Checks whether the doubly linked list is empty SplDoublyLinkedList::key — Return current node index SplDoublyLinkedList::next — Move to next entry SplDoublyLinkedList::offsetExists — Returns whether the requested $index exists SplDoublyLinkedList::offsetGet — Returns the value at the specified $index SplDoublyLinkedList::offsetSet — Sets the value at the specified $index to $newval SplDoublyLinkedList::offsetUnset — Unsets the value at the specified $index SplDoublyLinkedList::pop — Pops a node from the end of the doubly linked list SplDoublyLinkedList::prev — Move to previous entry SplDoublyLinkedList::push — Pushes an element at the end of the doubly linked list SplDoublyLinkedList::rewind — Rewind iterator back to the start SplDoublyLinkedList::serialize — Serializes the storage SplDoublyLinkedList::setIteratorMode — Sets the mode of iteration SplDoublyLinkedList::shift — Shifts a node from the beginning of the doubly linked list SplDoublyLinkedList::top — Peeks at the node from the end of the doubly linked list SplDoublyLinkedList::unserialize — Unserializes the storage SplDoublyLinkedList::unshift — Prepends the doubly linked list with an element SplDoublyLinkedList::valid — Check whether the doubly linked list contains more nodes   有兴趣的同学自己去看看～</description>
+    </item>
     
     <item>
       <title>PHP协程之路-事件循环Event Loop</title>
