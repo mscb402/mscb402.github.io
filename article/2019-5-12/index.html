@@ -1,0 +1,528 @@
+<!doctype html>
+<html class="no-js" lang="zh-cn">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="author" content="Jonathan Chen">
+        <meta name="description" content="Keep curious!">
+        <meta name="keywords" content="blog, technology, python, pythonista, programming, developer, software developer, software engineer, azure, cloud, cloud computing, testing, clean code">
+        <meta name="generator" content="Hugo 0.54.0" />
+        <title> PHP协程之路-协程实现 | Jonathan Chen&#39;s Blog</title>
+        <meta name="description" content="PHP协程之路-协程实现 - Keep curious!">
+        <meta itemprop="name" content="PHP协程之路-协程实现">
+        <meta itemprop="description" content="PHP协程之路-协程实现 - Keep curious!">
+        <meta property="og:title" content="PHP协程之路-协程实现">
+        <meta property="og:description" content="PHP协程之路-协程实现 - Keep curious!">
+        <meta property="og:image" content="https://www.gravatar.com/avatar/73e7f10f7883ff287d4571c4c190fd93?size=200">
+        <meta property="og:url" content="https://mscb402.github.io/article/2019-5-12/">
+        <meta property="og:site_name" content="Jonathan Chen&#39;s Blog">
+        <meta property="og:type" content="article">
+        <link rel="icon" type="image/png" href="https://mscb402.github.io/favicon-32x32.png" sizes="32x32">
+        <link rel="icon" type="image/png" href="https://mscb402.github.io/favicon-16x16.png" sizes="16x16">
+
+	
+
+        
+        <link rel="stylesheet" href="https://mscb402.github.io/sass/theme.min.7f4b7ce40e75c56b2479c669b6e33cd1381e870b71fcf495203cc50ba0259faa.css">
+
+        
+
+        
+            
+        
+    </head>
+    <body class="bilberry-hugo-theme">
+        
+<nav>
+
+    <div class="container">
+        <ul class="topnav">
+            
+                
+                    <li><a href="https://github.com/mscb402" target="_blank">Github</a></li>
+                
+            
+                
+                    <li><a href="/page/about/">关于我</a></li>
+                
+            
+        </ul>
+
+        
+    </div>
+</nav>
+
+
+        <header>
+    <div class="container">
+        <div class="logo">
+            <a href="/page/about/" class="logo">
+                
+                    <img src="https://www.gravatar.com/avatar/73e7f10f7883ff287d4571c4c190fd93?d=mm&size=200" alt="">
+                
+
+                <span class="overlay"><i class="fa fa-home"></i></span>
+            </a>
+        </div>
+        <div class="titles">
+            <h3 class="title"><a href="/">Jonathan Chen&#39;s Blog</a>
+            </h3>
+            
+                <span class="subtitle">Keep curious!</span>
+            
+            <h3 class="title">
+                <div class="social-media">
+                    
+                        <a href="https://twitter.com/chenbeng1" target="_blank"><i class="fa fa-twitter"></i></a>
+                    
+                    
+                        <a href="https://github.com/mscb402" target="_blank"><i class="fa fa-github"></i></a>
+                    
+                    
+                    
+                    
+                </div>
+            </h3>
+        </div>
+
+    
+
+        
+        <div class="toggler">
+        
+            <i class="fa fa-bars" aria-hidden="true"></i>
+        </div>
+    </div>
+</header>
+
+
+        <div class="main container">
+            
+     
+    <div class="article-wrapper u-cf single">
+        
+            <a class="bubble" href="/article/2019-5-12/">
+    <i class="fa fa-fw fa-pencil"></i>
+</a>
+
+<article class="default article">
+    
+
+    <div class="content">
+    <h3><a href="/article/2019-5-12/">PHP协程之路-协程实现</a></h3>
+    <div class="meta">
+        
+            
+                <span class="date moment">2019-05-12</span>
+            
+        
+
+        
+
+        
+            <span class="categories">
+                
+                    <a href="/categories/%E6%8A%80%E6%9C%AF%E6%A6%82%E5%BF%B5">技术概念</a>
+                
+                    <a href="/categories/%E6%8A%80%E6%9C%AF">技术</a>
+                
+            </span>
+        
+
+        
+            <span class="author"><a href="/author/jonathan-chen">Jonathan Chen</a></span>
+        
+    </div>
+
+    
+        
+
+<p>经过前几篇文章的铺垫，这一篇文章，我们终于要开始运用我们所学的知识，把这个协程写出来了。</p>
+
+<p>闲话不多说，直接开始。</p>
+
+<h2 id="调度器的实现">调度器的实现</h2>
+
+<p>上篇文章我们做了一个简单的调度器，但是那个调度器不是为我们协程准备的。所以这一篇文章，我们用原来的代码改一改。</p>
+
+<h3 id="双向链表">双向链表</h3>
+
+<p>另外，上一篇文章，我们用数组来存储事件列表。这实在是low了一点，而且也不是一个好的习惯。我们这一篇文章，来尝试用“双向链表”来存储事件列表。</p>
+
+<p>至于双向链表是啥，我这里就不科普了。这是计算机科学的入门知识，它属于数据结构。如果想详细了解了解，可以看看维基百科 <a href="https://zh.wikipedia.org/zh-hans/双向链表">https://zh.wikipedia.org/zh-hans/%E5%8F%8C%E5%90%91%E9%93%BE%E8%A1%A8</a></p>
+
+<p>由于PHP是一个比较高层的语言，对直接内存操作不是特别方便。所以我这里不打算使用原生PHP语法去做一个双向链表，而是使用PHP自带的SPL标准库函数<code>SplDoublyLinkedList</code>。它的文档在这里<a href="https://www.php.net/manual/zh/class.spldoublylinkedlist.php">https://www.php.net/manual/zh/class.spldoublylinkedlist.php</a>。</p>
+
+<p>调用方法类似于</p>
+
+<blockquote>
+<ul>
+<li><a href="https://www.php.net/manual/zh/spldoublylinkedlist.add.php">SplDoublyLinkedList::add</a> — Add/insert a new value at the specified index</li>
+<li><a href="https://www.php.net/manual/zh/spldoublylinkedlist.bottom.php">SplDoublyLinkedList::bottom</a> — Peeks at the node from the beginning of the doubly linked list</li>
+<li><a href="https://www.php.net/manual/zh/spldoublylinkedlist.construct.php">SplDoublyLinkedList::__construct</a> — Constructs a new doubly linked list</li>
+<li><a href="https://www.php.net/manual/zh/spldoublylinkedlist.count.php">SplDoublyLinkedList::count</a> — Counts the number of elements in the doubly linked list</li>
+<li><a href="https://www.php.net/manual/zh/spldoublylinkedlist.current.php">SplDoublyLinkedList::current</a> — Return current array entry</li>
+<li><a href="https://www.php.net/manual/zh/spldoublylinkedlist.getiteratormode.php">SplDoublyLinkedList::getIteratorMode</a> — Returns the mode of iteration</li>
+<li><a href="https://www.php.net/manual/zh/spldoublylinkedlist.isempty.php">SplDoublyLinkedList::isEmpty</a> — Checks whether the doubly linked list is empty</li>
+<li><a href="https://www.php.net/manual/zh/spldoublylinkedlist.key.php">SplDoublyLinkedList::key</a> — Return current node index</li>
+<li><a href="https://www.php.net/manual/zh/spldoublylinkedlist.next.php">SplDoublyLinkedList::next</a> — Move to next entry</li>
+<li><a href="https://www.php.net/manual/zh/spldoublylinkedlist.offsetexists.php">SplDoublyLinkedList::offsetExists</a> — Returns whether the requested $index exists</li>
+<li><a href="https://www.php.net/manual/zh/spldoublylinkedlist.offsetget.php">SplDoublyLinkedList::offsetGet</a> — Returns the value at the specified $index</li>
+<li><a href="https://www.php.net/manual/zh/spldoublylinkedlist.offsetset.php">SplDoublyLinkedList::offsetSet</a> — Sets the value at the specified $index to $newval</li>
+<li><a href="https://www.php.net/manual/zh/spldoublylinkedlist.offsetunset.php">SplDoublyLinkedList::offsetUnset</a> — Unsets the value at the specified $index</li>
+<li><a href="https://www.php.net/manual/zh/spldoublylinkedlist.pop.php">SplDoublyLinkedList::pop</a> — Pops a node from the end of the doubly linked list</li>
+<li><a href="https://www.php.net/manual/zh/spldoublylinkedlist.prev.php">SplDoublyLinkedList::prev</a> — Move to previous entry</li>
+<li><a href="https://www.php.net/manual/zh/spldoublylinkedlist.push.php">SplDoublyLinkedList::push</a> — Pushes an element at the end of the doubly linked list</li>
+<li><a href="https://www.php.net/manual/zh/spldoublylinkedlist.rewind.php">SplDoublyLinkedList::rewind</a> — Rewind iterator back to the start</li>
+<li><a href="https://www.php.net/manual/zh/spldoublylinkedlist.serialize.php">SplDoublyLinkedList::serialize</a> — Serializes the storage</li>
+<li><a href="https://www.php.net/manual/zh/spldoublylinkedlist.setiteratormode.php">SplDoublyLinkedList::setIteratorMode</a> — Sets the mode of iteration</li>
+<li><a href="https://www.php.net/manual/zh/spldoublylinkedlist.shift.php">SplDoublyLinkedList::shift</a> — Shifts a node from the beginning of the doubly linked list</li>
+<li><a href="https://www.php.net/manual/zh/spldoublylinkedlist.top.php">SplDoublyLinkedList::top</a> — Peeks at the node from the end of the doubly linked list</li>
+<li><a href="https://www.php.net/manual/zh/spldoublylinkedlist.unserialize.php">SplDoublyLinkedList::unserialize</a> — Unserializes the storage</li>
+<li><a href="https://www.php.net/manual/zh/spldoublylinkedlist.unshift.php">SplDoublyLinkedList::unshift</a> — Prepends the doubly linked list with an element</li>
+<li><a href="https://www.php.net/manual/zh/spldoublylinkedlist.valid.php">SplDoublyLinkedList::valid</a> — Check whether the doubly linked list contains more nodes</li>
+</ul>
+</blockquote>
+
+<p>有兴趣的同学自己去看看～</p>
+
+<h3 id="调度器类">调度器类</h3>
+
+<p>我们定义一个名为Scheduler的类，专门用于做调度。</p>
+
+<pre><code class="language-php">class Scheduler{
+    public $coroutines;
+    function  __construct(){
+        $this-&gt;coroutines = new SplDoublyLinkedList();
+        $this-&gt;coroutines-&gt;setIteratorMode(SplDoublyLinkedList::IT_MODE_FIFO);
+    }
+    public function add($c){
+        if($c instanceof Closure){
+            $c = $c();
+        }
+        if($c instanceof Generator){
+            $this-&gt;coroutines-&gt;push($c);
+        }
+        
+    }
+    public function run(){
+        $dll = $this-&gt;coroutines;
+        while($dll-&gt;count() &gt; 0){
+            $c = $dll-&gt;shift();
+            $ret = $this-&gt;eval($c);
+            if($ret){
+                continue;
+            }
+            $dll-&gt;push($c);
+        }
+    }
+    private function eval($e){
+        if($e-&gt;valid()){
+            $e-&gt;next();
+            return false;
+        }else{
+            return true;
+        }
+
+    }
+}
+</code></pre>
+
+<p><code>__construct</code>是构造函数，初始化一个双向链表，并设置迭代模式为队列(FIFO)<code>SplDoublyLinkedList::IT_MODE_FIFO</code></p>
+
+<p><code>add</code> 是一个方法，用于添加协程到队列中。这个方法第一个if为判定传入的是否为一个闭包函数，如果是则解开闭包，然后再判定解开的闭包是否为一个生成器（即协程），如果是生成器，那就添加到协程队列中。</p>
+
+<p><code>run</code> 才是对协程列表进行遍历执行的调度函数。它使用一个while循环，循环判断条件为双向链表内的元素个数。进入循环后，使用<code>shift</code>方法从队列头部取出一个元素。并传给<code>eval</code>的内部方法对函数体进行执行。最后判定返回值是否为true，如果是true则表示该协程执行完毕。负责，把协程继续添加到队列尾部，等待下一轮调用。</p>
+
+<p><code>eval</code> 协程到调用方法，先判断协程是否还可用，如果可用，就执行，并返回false。</p>
+
+<h2 id="案例测试">案例测试</h2>
+
+<p>一个极其简单的调度类，完成了。我们写一个测试案例试试看。</p>
+
+<pre><code class="language-php">$s = new Scheduler();
+$s-&gt;add(function(){
+   echo &quot;Run 1\n&quot;;
+   yield;
+   echo &quot;1-1\n&quot;;
+   yield;
+   echo &quot;1-2\n&quot;;
+   yield;
+   echo &quot;1-3\n&quot;;
+   yield;
+   echo &quot;1-4\n&quot;;
+   yield;
+   echo &quot;1-5\n&quot;;
+});
+$s-&gt;add(function(){
+   echo &quot;Run 2\n&quot;;
+   yield;
+   echo &quot;2-1\n&quot;;
+   yield;
+   echo &quot;2-2\n&quot;;
+   yield;
+   echo &quot;2-3\n&quot;;
+   yield;
+   echo &quot;2-4\n&quot;;
+   yield;
+   echo &quot;2-5\n&quot;;
+});
+$s-&gt;run();
+</code></pre>
+
+<p>首先，第一行代码声明了一个调度类，然后调用add，添加了2个闭包函数到队列中，最后调用run方法对它进行调度。</p>
+
+<p>前面几篇文章我们也已经了解到了，我们这里的“协程”是利用生成器的一些特性去实现的。诚如你所见，yield就是生成器里的一个语法。另外我们也已经了解到了，协程最大的特点就是协作式调度，所以需要在你自己的代码里，显性的调用yield，表示愿意让出执行时间片。看起来有一点烦，这个确实是如此。</p>
+
+<p>OK！我们来执行一下这个代码看看效果</p>
+
+<pre><code>Run 1
+1-1
+Run 2
+2-1
+1-2
+2-2
+1-3
+2-3
+1-4
+2-4
+1-5
+2-5
+</code></pre>
+
+<p>果然，各个输出交替出现，成功实现了时间片交替执行～～～</p>
+
+<h2 id="协程调用协程">协程调用协程</h2>
+
+<p>如何在协程里面调用协程，这是一个很必要解决的问题。因为我们的代码肯定会去调用一些其他协程函数。而其他协程函数也必须要像我们自己写的协程函数一样能被中断和调度。</p>
+
+<p>所以按理说我们应该再实现一个协程的调用栈。但好的地方在于PHP已经给我们提供了这样的功能了，就是我们前面某篇文章写的那个<code>yield from</code>语法糖。使用这个语法糖，我们就能把远处的某个协程“嵌入”到本地协程里，并按照本地协程的执行流进行执行。</p>
+
+<p>我们这里实现一个简单的<code>random</code>函数，用于生成一个随机数。</p>
+
+<pre><code class="language-php">function random(){
+    yield;
+    //do something
+		yield;
+    return mt_rand(0,100);
+}
+</code></pre>
+
+<p>然后我们再写一个闭包协程来调用一些看看</p>
+
+<pre><code class="language-php">$s-&gt;add(function(){
+   echo &quot;Run 3\n&quot;;
+   yield;
+   $num = yield from random();
+   echo &quot;3-1:$num\n&quot;;
+   $num = yield from random();
+   echo &quot;3-2:$num\n&quot;;
+});
+</code></pre>
+
+<p>执行一下看看效果</p>
+
+<pre><code>Run 1
+1-1
+Run 2
+2-1
+Run 3
+3-1:82
+1-2
+2-2
+3-2:93
+1-3
+2-3
+1-4
+2-4
+1-5
+2-5
+</code></pre>
+
+<p>成功了！！</p>
+
+<p>唯一觉得比较讨厌的一点是，如果调用的是协程，那就得使用<code>yield from</code>语句，如果是普通函数，那我们就又要使用普通的调用方法进行调研，有一点麻烦。但是，也不是什么不好解决的问题，有兴趣可以自己试试看。</p>
+
+<hr />
+
+<p><em>注意：本文未经许可，不得转载</em></p>
+
+    
+</div>
+
+    
+<div class="footer">
+
+
+    
+        <div class="tags">
+            <i class="fa fa-tags"></i>
+            <div class="links">
+                
+                    <a href="/tags/%E5%B9%B6%E5%8F%91">并发</a>
+                
+                    <a href="/tags/%E5%B9%B6%E8%A1%8C">并行</a>
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+</article>
+
+        
+    </div>
+
+    
+        
+    
+
+     
+
+        </div>
+
+        
+<footer>
+    <div class="container">
+
+        
+        <div class="recent-posts">
+            <strong>最新帖子</strong>
+                <ul>
+                
+                    <li>
+                        <a href="/article/2019-5-12/">PHP协程之路-协程实现</a>
+                    </li>
+                
+                    <li>
+                        <a href="/article/2019-5-1/">PHP协程之路-事件循环Event Loop</a>
+                    </li>
+                
+                    <li>
+                        <a href="/article/2019-4-21/">PHP协程之路-yield from和协程初步</a>
+                    </li>
+                
+                    <li>
+                        <a href="/article/2019-4-7/">PHP协程之路-yield语法糖</a>
+                    </li>
+                
+                    <li>
+                        <a href="/article/3-29/">PHP协程之路-什么是协程</a>
+                    </li>
+                
+                    <li>
+                        <a href="/article/2019-3-23/">并发与并行，阻塞与非阻塞，异步与同步</a>
+                    </li>
+                
+                </ul>
+        </div>
+        
+
+        
+        <div class="categories">
+            <a href="/categories/"><strong>分类</strong></a>
+                <ul>
+                
+                    <li>
+                        <a href="/categories/%E6%8A%80%E6%9C%AF">技术 (6)</a>
+                    </li>
+                
+                    <li>
+                        <a href="/categories/%E6%8A%80%E6%9C%AF%E6%A6%82%E5%BF%B5">技术概念 (4)</a>
+                    </li>
+                
+                    <li>
+                        <a href="/categories/php">Php (2)</a>
+                    </li>
+                
+                    <li>
+                        <a href="/categories/%E8%87%AA%E8%A8%80%E8%87%AA%E8%AF%AD">自言自语 (1)</a>
+                    </li>
+                
+            </ul>
+        </div>
+        
+
+        <div class="right">
+            
+            <div class="external-profiles">
+                <strong>社交媒体</strong>
+
+                
+                
+                    <a href="https://twitter.com/chenbeng1" target="_blank"><i class="fa fa-twitter-adblock-proof"></i></a>
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                    <a href="https://github.com/mscb402" target="_blank"><i class="fa fa-github"></i></a>
+                
+                
+            </div>
+            
+
+            
+        </div>
+    </div>
+</footer>
+
+
+<div class="credits">
+    <div class="container">
+        <div class="copyright">
+            <a href="https://github.com/mscb402" target="_blank">
+                &copy;
+                
+                    2019
+                
+                by Chen Beng (Jonathan Chen)
+            </a>
+	    
+        </div>
+        <div class="author">
+            <a href="https://github.com/Lednerb/bilberry-hugo-theme" target="_blank">Bilberry Hugo Theme</a>
+        </div>
+    </div>
+</div>
+
+
+        
+
+        
+
+        
+        
+        <script type="text/javascript" src="https://mscb402.github.io/js/externalDependencies.2a3cf2b558bd16302d997f6c20de885831fe6e39f05a054ddede6211a4a78d882081b58973893707bbefb74dc3611b37e66edb04bc5f075f4a198b2d135d96ae.js" integrity="sha512-KjzytVi9FjAtmX9sIN6IWDH&#43;bjnwWgVN3t5iEaSnjYgggbWJc4k3B7vvt03DYRs35m7bBLxfB19KGYstE12Wrg=="></script>
+
+        
+        
+        <script type="text/javascript" src="https://mscb402.github.io/js/theme.ba9945b0c16d4ddb26fd4bd58193d268e92614f0c74cced07d6d8641ac7564d7.js" integrity="sha256-uplFsMFtTdsm/UvVgZPSaOkmFPDHTM7QfW2GQax1ZNc="></script>
+
+        <script>
+            $(".moment").each(function() {
+                $(this).text(
+                    moment( $(this).text() )
+                        .locale( "zh-cn" )
+                        .format('LL')
+                );
+            });
+
+            $(".footnote-return sup").html("【返回】");
+        </script>
+
+        
+            
+        
+
+        
+
+
+    </body>
+</html>
