@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>网络欺凌检测 on Jonathan Chen&#39;s Blog</title>
+    <link>https://mscb402.github.io/tags/%E7%BD%91%E7%BB%9C%E6%AC%BA%E5%87%8C%E6%A3%80%E6%B5%8B/</link>
+    <description>Recent content in 网络欺凌检测 on Jonathan Chen&#39;s Blog</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <lastBuildDate>Sat, 08 Jun 2019 09:46:53 +0800</lastBuildDate>
+    
+	<atom:link href="https://mscb402.github.io/tags/%E7%BD%91%E7%BB%9C%E6%AC%BA%E5%87%8C%E6%A3%80%E6%B5%8B/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>拒绝网络暴力！基于深度学习的网络欺凌检测</title>
+      <link>https://mscb402.github.io/article/2019-6-8/</link>
+      <pubDate>Sat, 08 Jun 2019 09:46:53 +0800</pubDate>
+      
+      <guid>https://mscb402.github.io/article/2019-6-8/</guid>
+      <description>本文为我原创的文章，原文我已经投稿在Freebuf上，如果需要转载请务必带上我在Freebuf上的文章链接，谢谢！如需商业使用，请务必联系我和Freebuf客服。
+网络暴力，或者说网络欺凌，在互联网上实在太普遍。如果你没有受到过网络暴力，那你很有可能不是一个有多年网络使用经验的人。
+网络暴力比杠精还可恶。后者只是喜欢刷存在感，如果看到他的回复你只会觉得很烦，因为你知道他讲话的目的只是为了表现自己，凸显他自己“懂”的比你多，而前者才是真正的噩梦，他是带有目的性的语言暴力，网络施暴者我们可以称之为恶魔。
+会遇到的恶魔一般有2种，一种是纯粹的心理变态，他会攻击在网络上遇到的所有人，没有什么理由，只是为了他自己心情愉悦，就是我们俗称的“戾气重”，负能量的携带者。另外一种是，被激怒的人，这个可能相对来说会普遍一点。一般发生在一些问题的争论上，而且往往是在争论中处于弱势的一方。而且这类人大部分来源与前文所说的杠精。
+杠精到恶魔的转变，他们的心路历程历程大概是这样的：
+ E: 看见一个问题-&amp;gt;
+E: 回复一下突出自己的专业/聪明/与众不同-&amp;gt;
+O: 受到他人的反对-&amp;gt;
+E: 断章取义的反驳回去-&amp;gt;</description>
+    </item>
+    
+  </channel>
+</rss>

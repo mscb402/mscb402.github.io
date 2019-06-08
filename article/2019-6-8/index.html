@@ -1,0 +1,1004 @@
+<!doctype html>
+<html class="no-js" lang="zh-cn">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="author" content="Jonathan Chen">
+        <meta name="description" content="Keep curious!">
+        <meta name="keywords" content="blog, technology, python, pythonista, programming, developer, software developer, software engineer, azure, cloud, cloud computing, testing, clean code">
+        <meta name="generator" content="Hugo 0.54.0" />
+        <title> 拒绝网络暴力！基于深度学习的网络欺凌检测 | Jonathan Chen&#39;s Blog</title>
+        <meta name="description" content="拒绝网络暴力！基于深度学习的网络欺凌检测 - Keep curious!">
+        <meta itemprop="name" content="拒绝网络暴力！基于深度学习的网络欺凌检测">
+        <meta itemprop="description" content="拒绝网络暴力！基于深度学习的网络欺凌检测 - Keep curious!">
+        <meta property="og:title" content="拒绝网络暴力！基于深度学习的网络欺凌检测">
+        <meta property="og:description" content="拒绝网络暴力！基于深度学习的网络欺凌检测 - Keep curious!">
+        <meta property="og:image" content="https://www.gravatar.com/avatar/73e7f10f7883ff287d4571c4c190fd93?size=200">
+        <meta property="og:url" content="https://mscb402.github.io/article/2019-6-8/">
+        <meta property="og:site_name" content="Jonathan Chen&#39;s Blog">
+        <meta property="og:type" content="article">
+        <link rel="icon" type="image/png" href="https://mscb402.github.io/favicon-32x32.png" sizes="32x32">
+        <link rel="icon" type="image/png" href="https://mscb402.github.io/favicon-16x16.png" sizes="16x16">
+
+	
+
+        
+        <link rel="stylesheet" href="https://mscb402.github.io/sass/theme.min.7f4b7ce40e75c56b2479c669b6e33cd1381e870b71fcf495203cc50ba0259faa.css">
+
+        
+
+        
+            
+        
+    </head>
+    <body class="bilberry-hugo-theme">
+        
+<nav>
+
+    <div class="container">
+        <ul class="topnav">
+            
+                
+                    <li><a href="https://github.com/mscb402" target="_blank">Github</a></li>
+                
+            
+                
+                    <li><a href="/page/about/">关于我</a></li>
+                
+            
+        </ul>
+
+        
+    </div>
+</nav>
+
+
+        <header>
+    <div class="container">
+        <div class="logo">
+            <a href="/page/about/" class="logo">
+                
+                    <img src="https://www.gravatar.com/avatar/73e7f10f7883ff287d4571c4c190fd93?d=mm&size=200" alt="">
+                
+
+                <span class="overlay"><i class="fa fa-home"></i></span>
+            </a>
+        </div>
+        <div class="titles">
+            <h3 class="title"><a href="/">Jonathan Chen&#39;s Blog</a>
+            </h3>
+            
+                <span class="subtitle">Keep curious!</span>
+            
+            <h3 class="title">
+                <div class="social-media">
+                    
+                        <a href="https://twitter.com/chenbeng1" target="_blank"><i class="fa fa-twitter"></i></a>
+                    
+                    
+                        <a href="https://github.com/mscb402" target="_blank"><i class="fa fa-github"></i></a>
+                    
+                    
+                    
+                    
+                </div>
+            </h3>
+        </div>
+
+    
+
+        
+        <div class="toggler">
+        
+            <i class="fa fa-bars" aria-hidden="true"></i>
+        </div>
+    </div>
+</header>
+
+
+        <div class="main container">
+            
+     
+    <div class="article-wrapper u-cf single">
+        
+            <a class="bubble" href="/article/2019-6-8/">
+    <i class="fa fa-fw fa-pencil"></i>
+</a>
+
+<article class="default article">
+    
+
+    <div class="content">
+    <h3><a href="/article/2019-6-8/">拒绝网络暴力！基于深度学习的网络欺凌检测</a></h3>
+    <div class="meta">
+        
+            
+                <span class="date moment">2019-06-08</span>
+            
+        
+
+        
+
+        
+            <span class="categories">
+                
+                    <a href="/categories/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0">深度学习</a>
+                
+                    <a href="/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0">机器学习</a>
+                
+                    <a href="/categories/python">python</a>
+                
+            </span>
+        
+
+        
+            <span class="author"><a href="/author/jonathan-chen">Jonathan Chen</a></span>
+        
+    </div>
+
+    
+        
+
+<p><em>本文为我原创的文章，原文我已经投稿在Freebuf上，如果需要转载请务必带上我在Freebuf上的文章链接，谢谢！如需商业使用，请务必联系我和Freebuf客服。</em></p>
+
+<p>网络暴力，或者说网络欺凌，在互联网上实在太普遍。如果你没有受到过网络暴力，那你很有可能不是一个有多年网络使用经验的人。</p>
+
+<p>网络暴力比杠精还可恶。后者只是喜欢刷存在感，如果看到他的回复你只会觉得很烦，因为你知道他讲话的目的只是为了表现自己，凸显他自己“懂”的比你多，而前者才是真正的噩梦，他是带有目的性的语言暴力，网络施暴者我们可以称之为恶魔。</p>
+
+<p>会遇到的恶魔一般有2种，一种是纯粹的心理变态，他会攻击在网络上遇到的所有人，没有什么理由，只是为了他自己心情愉悦，就是我们俗称的“戾气重”，负能量的携带者。另外一种是，被激怒的人，这个可能相对来说会普遍一点。一般发生在一些问题的争论上，而且往往是在争论中处于弱势的一方。而且这类人大部分来源与前文所说的杠精。</p>
+
+<p>杠精到恶魔的转变，他们的心路历程历程大概是这样的：</p>
+
+<blockquote>
+<p>E: 看见一个问题-&gt;</p>
+
+<p>E: 回复一下突出自己的专业/聪明/与众不同-&gt;</p>
+
+<p>O: 受到他人的反对-&gt;</p>
+
+<p>E: 断章取义的反驳回去-&gt;</p>
+
+<p>O: 他人有理有据的反对-&gt;</p>
+
+<p>E: 继续断章取义的反驳回去，并表示自己比他专业-&gt;</p>
+
+<p>O: 他人继续有理有据的反对-</p>
+
+<p>E: 知道自己处于弱势，开始语言暴力-&gt;</p>
+
+<p>O: 他人继续回复-&gt;</p>
+
+<p>E: 开始大肆语言暴力，直到对方示弱或主动退出</p>
+</blockquote>
+
+<p>无论这个恶魔是属于哪一种，但凡你在自己的帖子里或者他人的帖子里看到相关的回复，都会破坏自己一天的好心情。</p>
+
+<p>网络暴力不可避免，至少现阶段会一直存在。原因很简单：
+1. 网络相对来说比较匿名，就算是实名制的平台，恶魔们口出恶言的心里压力也会比生活中小很多；
+2. 网民素质参差不齐；
+3. 网络没有地理限制，唯一的限制是光速，所以你每天在网络上遇到的人是你在现实中的好几倍，从概率上来说你遇到的暴力肯定会比现实中多；</p>
+
+<h2 id="信息的重要性">信息的重要性</h2>
+
+<p>我们现在的社会，从交通到通信，基础设施越来越完善，可以说人类凭一己之力，把自身从“双脚直立行走动物”提升到“神”的阶层。这是技术带来的伟大成就。可是人类的心智却没有随着科技的发展而发展。人类能轻易的被一些情绪影响，作出一些不利于人类发展的事情。我不是一个反对情感崇尚绝对理智的人，恰恰相反，我认为人类有情绪恰恰是区别于AI的地方，如果一个人类（有意识体）他不再有情绪那他还是属于人类吗？这个问题就留给哲学家们讨论，我们暂且不管。</p>
+
+<p>我只是觉得，未来，情绪控制是否也可以像交通网络等基础设施一样可供人类自由选择。</p>
+
+<p>如何去有效控制情绪？在人类彻底了解大脑前，可能没有太大的讨论余地。不过我们可以“曲线救国”，从信息源入手。自从互联网建立以来，人类虽然接受的信息越来越多，但信息来源却越来越趋于统一。随着AI技术的发展，“相关利益团体”可以在AI技术的辅助下，有效的对信息源进行选择性投递，从某种意义上来说这让“群体统一思想”的建立成为了可能。之前Facebook陷入的“剑桥分析”事件，就让很多人第一次意识到，现阶段自己可能都没法<strong>独立自由</strong>的作出个人决定。</p>
+
+<p>我想这已经不是危言耸听了，大家其实多多少少已经意识到。</p>
+
+<p>另外，日常生活中我们经常谈到的，家庭环境/成长环境对一个人有很大影响，其实他们的本质是在不同环境下你收到的信息不同，这些信息会在你的成长中，渐渐成为你的一部分。著名的科学家薛定谔在他的一本生物学著作《生命是什么》，就提出了“生命以负熵为食”，即“生命依靠从外部环境摄取负熵来维持和发展。”，我更倾向于把“负熵”当作消除混乱度的信息。</p>
+
+<p>所以，我主要想表达是，<strong>你接受到哪些信息，很大概率会让你变成哪类人</strong>。如果一个人大部分时间都在接受网络暴力，那他的心智肯对会出现一些异常。于己于社会都不是件好事情。</p>
+
+<h2 id="用上ai技术">用上AI技术</h2>
+
+<p>控制信息来源的，是一个控制情绪的好办法，过滤掉一些充满戾气、充满负能力的信息，生活会更美好，人生会更加积极向上！！</p>
+
+<p>传统互联网，要过滤这些糟粕，无非就是人工审查、关键词屏蔽。前者的优势在于准确率高，劣势是价格昂贵，效率低。后者的优势是成本低且速度快，劣势是准确率不够高。</p>
+
+<p>AI技术经历了3次寒冬，这一次得益于大数据和计算能力的巨大提升，使用变得越来越广泛。人们渐渐发现深度学习等相关技术，它们展现出的对现实世界的强大建模能力，确实对我们有很大帮助。</p>
+
+<p>我也看到越来越多的公司开始All in AI，相关技术的应用已经遍布我们周围了。人脸手机解锁，人脸识别支付，车牌识别，交通拥堵检测，信用卡欺诈检测等等，甚至我们前段时间很火的“第一张黑洞照片”，也是依托于AI、大数据相关算法进行处理得到的。如果仔细思考，你会发现现阶段的弱AI最大的优势在于，很擅长做一些”低智能“且重复性高的任务，比如车牌识别，这个我们人类很轻松能做到，但长期且重复的做就很难了。</p>
+
+<p>随着AI技术的发展，业界的大牛，已经发明出很多做NLP（自然语言处理）效果很好的模型和网络。几乎每年都能看到一些突破，比如今年的Google的Bert模型还有OpenAI GPT这种。</p>
+
+<p>总的来说，现阶段靠深度学习已经可以得到一些尚可接受成果。</p>
+
+<p>我们可以通过<strong>主动检测加过滤</strong>的方法，来有效<strong>控制低质的信息流入</strong>。</p>
+
+<p>这篇文章的后半部分我们来做一个不算复杂的神经网络来检测网络暴力。</p>
+
+<h2 id="搞一个ai出来">搞一个AI出来</h2>
+
+<p>要检测一段话是否网络暴力，实际上是一个比较简单的任务。因为网络暴力实际上大部分都是人身攻击，这对机器来说不是什么难题。所有人都可以训练一个自己的模型出来，只要你稍微有一点点机器学习、深度学习的基础知识，就可以很轻松的实现。</p>
+
+<p>唯一不足的地方，就是由于语言的博大精深，每个人的情况都不一样，有时候的一些攻击可能是针对某个人的，比如从你个人的缺陷角度出发进行攻击。这就束手无策了，因为只要能掌握一个人的弱点，就能用最“友好”的语言，讲最狠的话，行最大的恶。这些就不是我们这篇文章需要的关注的了，我们的目标是要检测陌生人的恶毒言论，所有基本上都是一些人身攻击啊，脏话啊等等。</p>
+
+<p>这对人工智能来说，任务就比较明确的，通过不断的迭代，找出哪些词语于网络暴力相关，以及哪些词语的组合顺序也算是网络暴力等等。这些我们使用人工手动编码的方式当然也可以做到，但肯定不如让机器自己去学习这些特征并辨别来的有意思。</p>
+
+<p><strong>对了，还有一个需要注意的地方，网络暴力是人身攻击、辱骂等不友善的行为，并不是别人反对你的言论，让你觉得丢脸了，将觉得他就是网络暴力，这是两码事。</strong></p>
+
+<h3 id="数据获取">数据获取</h3>
+
+<p>要训练一个模型，最重要的就是要有数据。数据就是信息，模型就是通过从外界获取信息，然后不断的迭代计算（梯度下降），再编码到自己的网络（权重）里。这样就形成了他自己的“世界观”，下一次看到需要判别的数据，它就会利用自己的“三观”发表看法（预测）。</p>
+
+<p>而我们作为它的建造师，肯定是希望它的“三观”要正，所以在有监督的学习里，数据必须是要标注过的。</p>
+
+<p>我们需要一大堆数据，这对数据的内容是网友发表的文字，其中有一些是网络暴力的言论，有一些是正常的言论。</p>
+
+<p>在kaggle上有一份数据集，就是关于网络欺凌的。链接在这里<a href="https://www.kaggle.com/dataturks/dataset-for-detection-of-cybertrolls">https://www.kaggle.com/dataturks/dataset-for-detection-of-cybertrolls</a></p>
+
+<p>但遗憾的是，它是收集自Twitter，全是英文的数据。所以这一篇文章的我无奈的选择这一份英文的数据进行训练。如果看完本文后，各位觉得感兴趣可以去收集一些中文的数据进行训练，其实原理都是相通的。</p>
+
+<h3 id="数据格式">数据格式</h3>
+
+<p>如果你没有kaggle账户，可以到我的Github项目里，下载“Dataset for Detection of Cyber-Trolls.json”这个文件<a href="https://github.com/mscb402/Cybertrolls-Detection/">https://github.com/mscb402/Cybertrolls-Detection/</a></p>
+
+<p>下载以后，我们可以用文本软件打开。</p>
+
+<p>数据大概是这样</p>
+
+<pre><code class="language-json">{&quot;content&quot;: &quot;Get fucking real dude.&quot;,&quot;annotation&quot;:{&quot;notes&quot;:&quot;&quot;,&quot;label&quot;:[&quot;1&quot;]},&quot;extras&quot;:null,&quot;metadata&quot;:{&quot;first_done_at&quot;:1527503426000,&quot;last_updated_at&quot;:1527503426000,&quot;sec_taken&quot;:0,&quot;last_updated_by&quot;:&quot;jI67aE5hwwdh6l16bcfFVnpyREd2&quot;,&quot;status&quot;:&quot;done&quot;,&quot;evaluation&quot;:&quot;NONE&quot;}}
+
+{&quot;content&quot;: &quot;She is as dirty as they come  and that crook Rengel  the Dems are so fucking corrupt it's a joke. Make Republicans look like  ...&quot;,&quot;annotation&quot;:{&quot;notes&quot;:&quot;&quot;,&quot;label&quot;:[&quot;1&quot;]},&quot;extras&quot;:null,&quot;metadata&quot;:{&quot;first_done_at&quot;:1527503426000,&quot;last_updated_at&quot;:1527503426000,&quot;sec_taken&quot;:0,&quot;last_updated_by&quot;:&quot;jI67aE5hwwdh6l16bcfFVnpyREd2&quot;,&quot;status&quot;:&quot;done&quot;,&quot;evaluation&quot;:&quot;NONE&quot;}}
+
+{&quot;content&quot;: &quot;why did you fuck it up. I could do it all day too. Let's do it when you have an hour. Ping me later to sched writing a book here.&quot;,&quot;annotation&quot;:{&quot;notes&quot;:&quot;&quot;,&quot;label&quot;:[&quot;1&quot;]},&quot;extras&quot;:null,&quot;metadata&quot;:{&quot;first_done_at&quot;:1527503426000,&quot;last_updated_at&quot;:1527503426000,&quot;sec_taken&quot;:0,&quot;last_updated_by&quot;:&quot;jI67aE5hwwdh6l16bcfFVnpyREd2&quot;,&quot;status&quot;:&quot;done&quot;,&quot;evaluation&quot;:&quot;NONE&quot;}}
+{&quot;
+</code></pre>
+
+<p>可以看到，它其实并不是标准的json格式，如果直接读入，会解析不了。其实它是每一行一个JSON对象，一个JSON对象是一个标注数据。所以你应该一行一行的读入并解析才行。</p>
+
+<p>我们再来看一下数据结构</p>
+
+<pre><code class="language-json">{
+  &quot;content&quot;: &quot;Get fucking real dude.&quot;,
+  &quot;annotation&quot;:{
+    &quot;notes&quot;:&quot;&quot;,
+    &quot;label&quot;:[&quot;1&quot;]
+  },
+  &quot;extras&quot;:null,
+  &quot;metadata&quot;:{
+    &quot;first_done_at&quot;:1527503426000,
+    &quot;last_updated_at&quot;:1527503426000,
+    &quot;sec_taken&quot;:0,
+    &quot;last_updated_by&quot;:&quot;jI67aE5hwwdh6l16bcfFVnpyREd2&quot;,
+    &quot;status&quot;:&quot;done&quot;,
+    &quot;evaluation&quot;:&quot;NONE&quot;
+  }
+}
+</code></pre>
+
+<p>第一个是“content”毋庸置疑，就是我们需要的数据了。然后接下来是“annotation”标注信息，&rdquo;annotation&rdquo;里面的“label”字段就是我们需要的数据标签。<strong>1 表示网络暴力，0 表示正常文本</strong></p>
+
+<p>我们只要取出<code>json['content']</code>和<code>json['annotation']['label'][0]</code>这2个数据就可以了，其余的数据我们就不管，直接忽略即可。</p>
+
+<p>好了，开始工作</p>
+
+<h3 id="包导入">包导入</h3>
+
+<p>要训练AI模型，我们当然是使用python啦，所以python3肯定要先装好。</p>
+
+<p>然后我们使用Keras这个深度学习库，以Tensorflow作为Keras的backend。所以也要先装好<code>Keras</code>以及<code>Tensorflow</code>。顺便提一下，现在Keras已经差不多算是集成到tensorflow里面了，你可以直接用<code>from tensorflow import keras</code>了，但我这里还是用原来的keras。</p>
+
+<p>接着我们导入包</p>
+
+<pre><code class="language-python">import numpy as np
+import keras
+import os
+import json
+
+INPUT_DIR = './'
+</code></pre>
+
+<p>INPUT_DIR只是一个我自己定义的变量，用于定位等一下输入数据文件夹位置。</p>
+
+<h3 id="数据处理">数据处理</h3>
+
+<p>首先我们需要导入数据。</p>
+
+<p>先打开对应的数据集，然后我定义了2个数组变量来保存数据，分别为网络暴力数据<code>TrollsData</code>和友好数据<code>NonTrollsData</code>。</p>
+
+<p>接下来就是依次一行一行读入文本数据，并转换为json对象，然后分离出<code>content</code>以及<code>label</code>，保存到一个数据结构里面，数据结构如下</p>
+
+<pre><code class="language-python">{
+&quot;content&quot;:&quot;hello hello hello&quot;,
+&quot;annotation&quot;:0
+ }
+</code></pre>
+
+<p>最后根据标签信息，分别添加到对应的数组变量里面。</p>
+
+<p>代码如下：</p>
+
+<pre><code class="language-python">f = open(INPUT_DIR+'Dataset for Detection of Cyber-Trolls.json')
+TrollsData = [] # Label 为 1
+NonTrollsData = [] # Label 为 0
+for i in f:
+    temp = json.loads(i)
+    content = temp['content']
+    label = int(temp['annotation']['label'][0])
+    Data = {
+        &quot;content&quot;:content,
+        &quot;annotation&quot;:label
+    }
+    if label == 0:
+        NonTrollsData.append(Data)
+    else:
+        TrollsData.append(Data)
+f.close()
+print('数据总数：%d, 欺凌数据个数：%d, 友好数据个数：%d' % (len(TrollsData)+len(NonTrollsData),len(TrollsData),len(NonTrollsData))) 
+</code></pre>
+
+<p>执行这个代码，会输出</p>
+
+<pre><code>数据总数：20001, 欺凌数据个数：7822, 友好数据个数：12179
+</code></pre>
+
+<p>显而易见，结果并不平衡，欺凌数据个数远远小于友好数据个数，如果我们把这个数据传入神经网络训练。我们的模型会开始耍小聪明，它会把所有的输出都设置为0（即非网络暴力），这样就能达到60.9%的准确率。这显然不是我们希望的结果。我们不希望我们的AI耍小聪明，我们希望它真的能从数据中学到点什么，而不是只学会了自欺欺人。</p>
+
+<p>这属于数据不均衡的问题，业界也有提出各种各样的解决方案。我们就简单粗暴一点，直接把欺凌数据再复制一份加到原来的数据集里面。</p>
+
+<p>不过肯定不好直接复制一遍，我们会对复制的那一份加一点随机的扰动。</p>
+
+<p>代码如下</p>
+
+<pre><code class="language-python">import random 
+import copy
+
+new_temp_TrollsData =  copy.deepcopy(TrollsData)
+random.shuffle(new_temp_TrollsData)
+
+for i in range(len(new_temp_TrollsData)):
+    content = TrollsData[i]['content'].split(' ')
+    content_len = len(content)
+    r = random.randint(0,content_len - 1)
+    new_temp_TrollsData[i]['content'] += ' ' + content[r]
+    r = random.randint(0,content_len - 1)
+    new_temp_TrollsData[i]['content'] += ' ' + content[r]
+
+TrollsData += new_temp_TrollsData
+print('现在欺凌数据个数:%d'%len(TrollsData))
+</code></pre>
+
+<p>原理很简单，新复制一份，然后打乱它的顺序，再从源数组对应下标的数据里，随机提取2个单词，加到新数据的的末尾。</p>
+
+<p>这段代码结果输出为：</p>
+
+<pre><code>现在欺凌数据个数:15644
+</code></pre>
+
+<p>好吧！又多了一些，我们直接截断就好了。</p>
+
+<pre><code class="language-python">TrollsData = TrollsData[:12179]
+print('数据总数：%d, 欺凌数据个数：%d, 友好数据个数：%d' % (len(TrollsData)+len(NonTrollsData),len(TrollsData),len(NonTrollsData))) 
+</code></pre>
+
+<p>代码执行结果：</p>
+
+<pre><code>数据总数：24358, 欺凌数据个数：12179, 友好数据个数：12179
+</code></pre>
+
+<p>这下完美了～</p>
+
+<p>然后就是，把这2段数据整合起来，并打乱它们的顺序，以实现欺凌数据和非欺凌数据能随机交替出现。</p>
+
+<p>代码如下；</p>
+
+<pre><code class="language-python">Data = TrollsData + NonTrollsData
+random.shuffle(Data)
+</code></pre>
+
+<p>现在数据都在<code>Data</code>这个数组里了。</p>
+
+<h3 id="建立词表">建立词表</h3>
+
+<p>我们的想法是要建立一个单词的映射表，比如“hello ! How are you?”这一句话，我们希望能提取出4个单词<code>hello</code>、<code>How</code>、<code>are</code>和<code>you</code>，如何依次给他们一个唯一的ID。</p>
+
+<p>这里的词表我希望按照出现的频率来排序，并赋予ID。因此我们先来计算一下词频。</p>
+
+<p>把词频保存在WordFre这个Dict对象里。代码如下</p>
+
+<pre><code class="language-python">import re
+WordFre = {} #词频
+for d in Data:
+    content = keras.preprocessing.text.text_to_word_sequence(d['content'])
+    for c in content:
+        if c == '':
+            continue
+        word = c.lower()
+        if WordFre.get(word,None) == None:
+            WordFre[word] = 0
+        WordFre[word] += 1
+</code></pre>
+
+<p><code>keras.preprocessing.text.text_to_word_sequence</code>是keras提供的一个文本预处理函数，它可以把一个文本，处理为一个单词数组，比如“hello ! How are you?”，它会返回<code>['hello', 'how', 'are', 'you']</code>，它会去掉这些标点符号，然后把单词全部转换为小写的。</p>
+
+<p>词频建立成功以后，我们再根据词频里的词语顺序，给他们赋予ID，并写到WordIdx变量里</p>
+
+<pre><code class="language-python">threshold = 10
+WordIdx = {}
+indx = 0
+for w in sorted(WordFre.items(),key=lambda x:x[1],reverse=True):
+    key = w[0]
+    fre = w[1]
+    if fre &lt; threshold:
+        continue
+    indx += 1
+    WordIdx[key] = indx
+WordIdx['_PAD_'] = indx+1,
+WordIdx['_UNK_'] = indx+2
+</code></pre>
+
+<p>threshold表示阀门，对于出现频率小于这个阀门的词不给他赋予ID的权利。</p>
+
+<p>最后在词表末尾，写入2个新词<code>_PAD_</code>和<code>_UNK_</code>，前者是表示填充字符，后者表示未知字符（即遇见的词没有在词表里面的）。</p>
+
+<p>完成以后，把词表大小赋值给<code>WordIdxLen</code>变量。</p>
+
+<pre><code>WordIdxLen = len(WordIdx)
+json.dump(WordIdx,open('word.json','w'))
+</code></pre>
+
+<p>再把结果写的word.json这个文件里面，你可以在Github里下载到这个文件<a href="https://github.com/mscb402/Cybertrolls-Detection/">https://github.com/mscb402/Cybertrolls-Detection/</a></p>
+
+<h3 id="建立模型">建立模型</h3>
+
+<p>我们由于文本是序列数据，所以使用一个可以学习序列规律的网络RNN（循环神经网络）来学习。这边我选择的RNN类型是GRU，因为它相比于LSTM，参数小一点，节省训练时间。</p>
+
+<pre><code class="language-python">from keras.models import Sequential
+from keras.layers import Dense, Activation,Embedding,Bidirectional,GRU,Flatten,Dropout
+from keras import regularizers
+
+model = keras.models.Sequential()
+model.add(Embedding(input_dim=WordIdxLen+1,output_dim=50,mask_zero=True))
+model.add(Bidirectional(GRU(64,return_sequences=False,dropout=0.4)))
+model.add(Dense(units=32,activation='relu',kernel_regularizer=regularizers.l2(0.01)))
+model.add(Dropout(0.2, noise_shape=None, seed=None))
+model.add(Dense(units=16,activation='relu',kernel_regularizer=regularizers.l2(0.01)))
+model.add(Dense(units=1,activation='sigmoid'))
+model.compile(
+    optimizer='adam',
+    loss='binary_crossentropy',
+    metrics=['binary_accuracy'],
+)
+model.summary()
+print(model.input_shape)
+</code></pre>
+
+<p>对了，前面我们虽然建立了词表，但是词表的ID仅仅和频率有关，这显然不够友好。我们希望我们的网络还能学到一些词语和词语之间的关系，比如Word2Vec就是做这个事情的，有兴趣的同学可以看看。所以这里不打算用one-hot，而是选用一个Embedding层做词向量化，对于任何一个词都输出一个50维的稠密词向量。</p>
+
+<p>不了解one-hot的和Embedding的可以去找相关的资料阅读一下，这里不再展开了。</p>
+
+<p>网络的结果输出如下:</p>
+
+<pre><code>Layer (type)                 Output Shape              Param #   
+=================================================================
+embedding_1 (Embedding)      (None, None, 50)          131950    
+_________________________________________________________________
+bidirectional_1 (Bidirection (None, 128)               44160     
+_________________________________________________________________
+dense_1 (Dense)              (None, 32)                4128      
+_________________________________________________________________
+dropout_1 (Dropout)          (None, 32)                0         
+_________________________________________________________________
+dense_2 (Dense)              (None, 16)                528       
+_________________________________________________________________
+dense_3 (Dense)              (None, 1)                 17        
+=================================================================
+Total params: 180,783
+Trainable params: 180,783
+Non-trainable params: 0
+_________________________________________________________________
+</code></pre>
+
+<ol>
+<li><p>一个输出50维的embedding层，它的输出shape是(Batch, SeqNum, WordNum)  ,分别表示（批，序列，词向量），这是RNN网络要求的输入shape。</p></li>
+
+<li><p>一个双向的GRU层</p></li>
+
+<li><p>一个带有32个隐藏层的全连接神经网络，激活函数为relu，防止梯度消失</p></li>
+
+<li><p>一个0.2的dropout层，防止过拟合</p></li>
+
+<li><p>一个带有16个隐藏层的全连接神经网络，激活函数为relu</p></li>
+
+<li><p>输出层，一个神经元，激活函数为sigmoid</p></li>
+</ol>
+
+<p>训练使用的优化器（optimizer）是Adam，你可以自由选择其他的。</p>
+
+<p>训练使用的Loss函数是binary_crossentropy。</p>
+
+<h3 id="训练前">训练前</h3>
+
+<p>模型构建结束，数据也处理好了。接下来就要开始训练。</p>
+
+<p>我们选用的是RNN，RNN的特点是可以处理变长的数据，也就是说，无论这个文本有多长，都能处理完，然后返回一个数据，传给下一层神经网络继续训练。</p>
+
+<p>不过我们这里为了能实现批运算（就是把一堆数据打个包，一起算），所以必须把训练数据填充到一样长（预测的时候不需要要这样，仅为了训练才这么做），至于用什么来填充，还记得我们前面在建立词表的时候，添加了一个角<code>_PAD_</code>的词吗？它就是用来做填充用。</p>
+
+<p>举个例子，现在我们有2个句子：</p>
+
+<blockquote>
+<p>句子1 ： [&lsquo;hello&rsquo;]</p>
+
+<p>句子2 ： [&lsquo;how&rsquo;,&lsquo;are&rsquo;,&lsquo;you&rsquo;]</p>
+</blockquote>
+
+<p>填充长度为3，那么结果为</p>
+
+<blockquote>
+<p>句子1 ： [<code>_PAD_</code>,<code>_PAD_</code>,&lsquo;hello&rsquo;]</p>
+
+<p>句子2 ： [&lsquo;how&rsquo;,&lsquo;are&rsquo;,&lsquo;you&rsquo;]</p>
+</blockquote>
+
+<p>当然你也可以填充在后面，只是为个人实验下来觉得填充在前面比较好。</p>
+
+<pre><code class="language-python">#获取最大字符串长度，且对每一个content进行text_to_word_sequence
+max_str_len = 0
+for d in Data:
+    d['content'] = keras.preprocessing.text.text_to_word_sequence(d['content'])
+    if len(d['content']) &gt; max_str_len :
+        max_str_len = len(d['content'])
+</code></pre>
+
+<p>先获取一下最长的content有多长，获取到以后开始填充字符，请注意Data里面存放的是打乱以后的训练数据，WordIdx是词表</p>
+
+<pre><code class="language-python">#开始填充字符串
+TrainData = []
+TrainLabel = []
+for d in Data:
+    vec = [WordIdx.get(i,WordIdx['_UNK_']) for i in d['content']]
+    pad = WordIdx.get('_PAD_')
+    temp = keras.preprocessing.sequence.pad_sequences(sequences=[vec],maxlen=max_str_len,value=pad)
+    TrainData.append(temp[0])
+    TrainLabel.append(d['annotation'])
+</code></pre>
+
+<p>填充结束以后，把数据和标签分开，数据放在TrainData里面，标签放在TrainLabel里面。还有一件事情,你还会发现有<code>WordIdx['_UNK_']</code>,这表示遇到不在词表里的词都用<code>_UNK_</code>对于的ID去填充它。</p>
+
+<p>对于TrainLabel和TrainData里的数据我们可以看看，执行代码<code>TrainData[:1],TrainLabel[:10]</code>，输出：</p>
+
+<pre><code>([array([2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637,
+         2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637,
+         2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637,
+         2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637,
+         2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637,
+         2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637,
+         2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637,
+         2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637,
+         2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637,
+         2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637,
+         2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637,
+         2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637,
+         2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637,
+         2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637,
+         2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637,
+         2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637,
+         2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637,
+         2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637,
+         2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637,
+         2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637,
+         2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637,
+         2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637,
+         2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637,
+         2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637,
+         2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637,
+         2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637,
+         2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637,
+         2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637,
+         2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637,
+         2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637, 2637,
+         2637, 2637, 2637, 2637, 2637,    8, 2638,   71,    3, 2638, 2638,
+          143], dtype=int32)], [0, 0, 0, 0, 1, 0, 0, 0, 0, 0])
+</code></pre>
+
+<p>前面都是用<code>2637</code>来填充（即<code>_PAD</code>_对应的ID），只有后面<code>[8, 2638,71,3, 2638, 2638]</code>才是真实数据。</p>
+
+<p>后面的1和0的都是对应的标签。</p>
+
+<h3 id="训练">训练</h3>
+
+<p>一切都OK了，接下来就是分割一下训练集和测试集了。</p>
+
+<p>我们以0.9（90%）为界限，分割为训练集90%和测试集10%。他们的目的是，用“训练集”进行训练，训练结束以后，用测试集来测试我们训练的模型是否真的可以判别网络欺凌数据。</p>
+
+<pre><code class="language-python">#分割训练和测试集
+SPILT = 0.9
+trainNum = int(len(TrainData)*SPILT)
+finalTrainData = TrainData[0:trainNum]
+finalTrainLable = TrainLabel[0:trainNum]
+finalTestData = TrainData[trainNum:]
+finalTestLabel = TrainLabel[trainNum:]
+</code></pre>
+
+<p><strong>开始训练咯！！</strong></p>
+
+<p>调用下面的代码进行训练</p>
+
+<pre><code class="language-python">model.fit(
+  np.asarray(finalTrainData),
+  np.asarray(finalTrainLable),
+  batch_size=500,
+  epochs=100,
+  validation_split=0.05
+)
+</code></pre>
+
+<p>batch_size设置为500，迭代次数设置为100，每一个epoch再分出0.05作为验证集。</p>
+
+<p>最后用GPU训练了大概2个小时，这一行代码我执行了2次，总共训练了200 Epoch。最后测试集的准确率达到95%左右，验证集准确率达到88%。</p>
+
+<p>其实还可以继续训练下去，如果你们有兴趣可以继续。代码也都放在GitHub里面了。</p>
+
+<p>训练结束后，用<code>model.save('model.h5')</code>保存模型。</p>
+
+<h3 id="验证结果">验证结果</h3>
+
+<p>使用以下代码评估测试集的模型</p>
+
+<pre><code class="language-python">model2.evaluate(np.asarray(finalTestData),np.asarray(finalTestLabel))
+</code></pre>
+
+<p>结果大概在86%左右，对比验证集的准确率有所下降，但是还在合理范围内。另外我觉得网络还未收敛，还能继续训练。欢迎各位尝试。</p>
+
+<p><strong>注意：如果你打算继续训练这个网络，请不要导入我已经训练好的model.h5文件进行2次训练，因为前面代码中，我对Data进行随机打乱，然后截取前个训练数据，这将会对词表构建的产生影响，也就是说这一次hello对应ID53，下一次hello的ID为70。这将导致网络预测结果失效。如果你执意要导入model.h5进行训练，请务必同时导入词表word.json</strong></p>
+
+<h2 id="网络欺凌检测">网络欺凌检测</h2>
+
+<p>终于，我们训练好了网络，也得到了2个文件：“model.h5”和“word.json”。第一个是我们训练好的模型，第二个是词表，他们都非常重要，每一次训练产生的模型文件都于一个词表文件一一对应，丢掉其中任何一个都将导致网络无法正常工作。</p>
+
+<p>开始前我们要先导入训练模型，以及词表。把以下代码另外保存到一个文件或者一个新的ipynb文件里：</p>
+
+<pre><code class="language-python">import keras
+import json
+import numpy as np
+
+model = keras.models.load_model('model.h5')
+WordIdx = json.load(open('word.json'))
+def Bully(text):
+    s_q = keras.preprocessing.text.text_to_word_sequence(text)
+    s_v = [WordIdx.get(i,WordIdx['_UNK_']) for i in s_q]
+    res = model.predict(np.asarray([s_v]))
+    value = res[0][0]
+    if value &gt; 0.5:
+        return ('网络暴力',value)
+    else:
+        return ('正常',value)
+</code></pre>
+
+<p><code>Bully</code>是我们自定义的函数，它接受一个字符串，并预测它的结果。</p>
+
+<p>现在我们可以开始找一些其他数据来试试看效果。</p>
+
+<h3 id="example-1">Example 1</h3>
+
+<p>我刚刚从Twitter上随机找的一个欺凌数据</p>
+
+<pre><code class="language-python">Bully('''Did you read a Bible or something? You wrote dis tracks on your brother, abused women on camera and marketed gambling to kids, but now you're spreading &quot;love and positivity??&quot; Shut the fuck up you blithering ape.
+''')
+</code></pre>
+
+<p>返回<code>('网络暴力', 0.994856)</code>,确实挺暴力的！！</p>
+
+<h3 id="example-2">Example 2</h3>
+
+<p>接下来这个就有意思了，我们把例子1后面那句话删除掉，再试试看预测结果</p>
+
+<pre><code class="language-python">Bully('''Did you read a Bible or something? You wrote dis tracks on your brother, abused women on camera and marketed gambling to kids, but now you're spreading &quot;love and positivity??&quot;.
+''')
+</code></pre>
+
+<p>返回<code>('正常', 0.029955784)</code></p>
+
+<p>??? 小AI，你的三观呢？这明显是骂人的话，你为啥觉得是正常的呢？</p>
+
+<p>看来我们要来分析一下，我们把词对应到词表中，来看看</p>
+
+<pre><code>[['did', 93],
+ ['you', 2],
+ ['read', 295],
+ ['a', 4],
+ ['bible', '_UNK_'],
+ ['or', 46],
+ ['something', 163],
+ ['you', 2],
+ ['wrote', 1139],
+ ['dis', '_UNK_'],
+ ['tracks', '_UNK_'],
+ ['on', 18],
+ ['your', 17],
+ ['brother', 1123],
+ ['abused', '_UNK_'],
+ ['women', 711],
+ ['on', 18],
+ ['camera', 1122],
+ ['and', 7],
+ ['marketed', '_UNK_'],
+ ['gambling', '_UNK_'],
+ ['to', 5],
+ ['kids', 342],
+ ['but', 21],
+ ['now', 57],
+ [&quot;you're&quot;, 113],
+ ['spreading', '_UNK_'],
+ ['love', 65],
+ ['and', 7],
+ ['positivity', '_UNK_']]
+</code></pre>
+
+<p>很明显，那些骂人的话，完美避开了我们的词表，比如‘abused’就是一个很重要的词，它直接决定了这个句子的骂人高度。所以出现这个的原因在于，我们的训练数据太少了，毕竟一共才几千个词，就算都只存骂人的话也不够存啊。</p>
+
+<p>解决这个方法的途径是增加我们的训练数据。</p>
+
+<h3 id="example-3">Example 3</h3>
+
+<p>现在我们来测测另外一个词，“fuck”，这可能是几乎所有人都会的词吧？就是不懂英文也至少知道。</p>
+
+<p>我们来看看，我们的网络是不是真的就是只一个关键词检测器？</p>
+
+<pre><code class="language-python">Bully('''I fuck you''')
+</code></pre>
+
+<p>网络暴力，毋庸置疑了吧？看看输出<code>('网络暴力', 0.9870135)</code></p>
+
+<h3 id="example-4">Example 4</h3>
+
+<p>从前面的迹象来看，只要出现fuck就会提示网络暴力，我们再来试试看另外一个句子</p>
+
+<pre><code class="language-python">Bully('''this is a fuck man''')
+</code></pre>
+
+<p>首先解释一下“fuck man”，这在英文的语境中表示感叹，类似于我们的“草”，从网络上找的例子是：“<strong>Fuck man</strong>, she left me.”，“<strong>Fuck man</strong>, I can&rsquo;t believe that just happened!”，你甚至可以在这里看到它的解释：<a href="https://www.urbandictionary.com/define.php?term=fuck man">https://www.urbandictionary.com/define.php?term=fuck%20man</a></p>
+
+<p>总之，它只是一个惊叹词，不应该划分为网络暴力，应该关注其他部分说了什么。</p>
+
+<p>咱来看看输出结果<code>('正常', 0.3039719)</code>，不错，虽然有0.3，但确实还是属于正常范围，网络还是需要继续训练。</p>
+
+<p>这个例子说明，我们的模型不仅仅只做到了关键词检测，还能检测词语的搭配。</p>
+
+<h3 id="example-5">Example 5</h3>
+
+<p>再来一个，再一次测试一下fucking的例子：</p>
+
+<pre><code class="language-python">Bully('''this is a fucking bitch''')
+</code></pre>
+
+<p>输出<code>('网络暴力', 0.9353081)</code></p>
+
+<p>对了，fucking 是有在词表中存在<code>[['fucking', 36]]</code></p>
+
+<h3 id="example-6">Example 6</h3>
+
+<p>还是fucking</p>
+
+<pre><code class="language-python">Bully('''this is a fucking great''')
+</code></pre>
+
+<p>输出<code>('正常', 0.012206114)</code>，果然，知道fucking只是表示对后面的词进行修饰。</p>
+
+<p>以上2个例子说明，我们的模型学习到了英语的词性。</p>
+
+<h3 id="example-7">Example 7</h3>
+
+<p>再一次我们只输入fucking看看</p>
+
+<pre><code class="language-python">Bully('''fucking''')
+</code></pre>
+
+<p>输出<code>('网络暴力', 0.85581136)</code>，恩，网络暴力，我不是很了解英语语言习惯，不知道这样算不算是骂人的话，但至少现在可以很明确的说明，它不是简单的脏词判断，因为如果按照脏词来决定句子是否为网络暴力，那句子中一个fucking就差不多可以直接定义为暴力了。</p>
+
+<h3 id="小结">小结</h3>
+
+<p>通过以上几个例子我们可以相信我们小AI的三观了，但离实际使用的距离还很长，因为训练数据不够多，训练的时间也不够长，模型的网络也没有很好的进行调参。但我们可以通过以上的例子，来证明，使用AI相关技术进行检测网络暴力是有可行性的。</p>
+
+<p>PS，你可以在我对GitHub中找到CybertrollsDetection.py文件，可以运行他查看模型的判别结果，<code>python3 CybertrollsDetection.py 'BAD WORDS'</code></p>
+
+<h2 id="总结">总结</h2>
+
+<p>短短几年互联网已经在改变我们的生活习惯了，我作为一个99后，可能没有90后前辈们接触互联网的时间早，但我却深刻的感受到这十来年互联网科技突然就爆炸式的增涨。以一种人无法预料的速度在快速前进着，你会发现技术迭代更新的巨快，几乎一直有新东西等待你去学习和了解，如何能够心平气和的应对现在的信息爆炸时代，是每个人都应该去思考的。低质量/挑动情绪的信息，能过滤就过滤，把一些无关紧要的争论时间节省下来，用于发展自己，丰富自己的生活。这也许才是真正新时代的幸福吧！</p>
+
+<p>如果大家有兴趣，可以建立一个中文的网络欺诈检测模型，然后写个插件屏蔽这些暴力回复，为社会发展尽一份力呀！期待你们各位大神们的成果～</p>
+
+<p>** FREEBUF上的文章地址：<a href="http://www.freebuf.com/others-articles/204523.html">http://www.freebuf.com/others-articles/204523.html</a> 本文修改了一些错别字和一些语句**</p>
+
+<hr />
+
+<p><em>注意：本文未经许可，不得转载</em></p>
+
+    
+</div>
+
+    
+<div class="footer">
+
+
+    
+        <div class="tags">
+            <i class="fa fa-tags"></i>
+            <div class="links">
+                
+                    <a href="/tags/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0">深度学习</a>
+                
+                    <a href="/tags/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0">机器学习</a>
+                
+                    <a href="/tags/python">python</a>
+                
+                    <a href="/tags/%E7%BD%91%E7%BB%9C%E6%AC%BA%E5%87%8C%E6%A3%80%E6%B5%8B">网络欺凌检测</a>
+                
+                    <a href="/tags/%E7%BD%91%E7%BB%9C%E6%9A%B4%E5%8A%9B%E6%A3%80%E6%B5%8B">网络暴力检测</a>
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+</article>
+
+        
+    </div>
+
+    
+        
+    
+
+     
+
+        </div>
+
+        
+<footer>
+    <div class="container">
+
+        
+        <div class="recent-posts">
+            <strong>最新帖子</strong>
+                <ul>
+                
+                    <li>
+                        <a href="/article/2019-6-8/">拒绝网络暴力！基于深度学习的网络欺凌检测</a>
+                    </li>
+                
+                    <li>
+                        <a href="/article/2019-5-12/">PHP协程之路-协程实现</a>
+                    </li>
+                
+                    <li>
+                        <a href="/article/2019-5-1/">PHP协程之路-事件循环Event Loop</a>
+                    </li>
+                
+                    <li>
+                        <a href="/article/2019-4-21/">PHP协程之路-yield from和协程初步</a>
+                    </li>
+                
+                    <li>
+                        <a href="/article/2019-4-7/">PHP协程之路-yield语法糖</a>
+                    </li>
+                
+                    <li>
+                        <a href="/article/3-29/">PHP协程之路-什么是协程</a>
+                    </li>
+                
+                </ul>
+        </div>
+        
+
+        
+        <div class="categories">
+            <a href="/categories/"><strong>分类</strong></a>
+                <ul>
+                
+                    <li>
+                        <a href="/categories/%E6%8A%80%E6%9C%AF">技术 (6)</a>
+                    </li>
+                
+                    <li>
+                        <a href="/categories/%E6%8A%80%E6%9C%AF%E6%A6%82%E5%BF%B5">技术概念 (4)</a>
+                    </li>
+                
+                    <li>
+                        <a href="/categories/php">Php (2)</a>
+                    </li>
+                
+                    <li>
+                        <a href="/categories/python">Python (1)</a>
+                    </li>
+                
+                    <li>
+                        <a href="/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0">机器学习 (1)</a>
+                    </li>
+                
+                    <li>
+                        <a href="/categories/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0">深度学习 (1)</a>
+                    </li>
+                
+            </ul>
+        </div>
+        
+
+        <div class="right">
+            
+            <div class="external-profiles">
+                <strong>社交媒体</strong>
+
+                
+                
+                    <a href="https://twitter.com/chenbeng1" target="_blank"><i class="fa fa-twitter-adblock-proof"></i></a>
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                    <a href="https://github.com/mscb402" target="_blank"><i class="fa fa-github"></i></a>
+                
+                
+            </div>
+            
+
+            
+        </div>
+    </div>
+</footer>
+
+
+<div class="credits">
+    <div class="container">
+        <div class="copyright">
+            <a href="https://github.com/mscb402" target="_blank">
+                &copy;
+                
+                    2019
+                
+                by Chen Beng (Jonathan Chen)
+            </a>
+	    
+        </div>
+        <div class="author">
+            <a href="https://github.com/Lednerb/bilberry-hugo-theme" target="_blank">Bilberry Hugo Theme</a>
+        </div>
+    </div>
+</div>
+
+
+        
+
+        
+
+        
+        
+        <script type="text/javascript" src="https://mscb402.github.io/js/externalDependencies.2a3cf2b558bd16302d997f6c20de885831fe6e39f05a054ddede6211a4a78d882081b58973893707bbefb74dc3611b37e66edb04bc5f075f4a198b2d135d96ae.js" integrity="sha512-KjzytVi9FjAtmX9sIN6IWDH&#43;bjnwWgVN3t5iEaSnjYgggbWJc4k3B7vvt03DYRs35m7bBLxfB19KGYstE12Wrg=="></script>
+
+        
+        
+        <script type="text/javascript" src="https://mscb402.github.io/js/theme.ba9945b0c16d4ddb26fd4bd58193d268e92614f0c74cced07d6d8641ac7564d7.js" integrity="sha256-uplFsMFtTdsm/UvVgZPSaOkmFPDHTM7QfW2GQax1ZNc="></script>
+
+        <script>
+            $(".moment").each(function() {
+                $(this).text(
+                    moment( $(this).text() )
+                        .locale( "zh-cn" )
+                        .format('LL')
+                );
+            });
+
+            $(".footnote-return sup").html("【返回】");
+        </script>
+
+        
+            
+        
+
+        
+
+
+    </body>
+</html>
