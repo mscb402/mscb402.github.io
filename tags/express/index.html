@@ -1,0 +1,353 @@
+<!doctype html>
+<html class="no-js" lang="zh-cn">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="author" content="Jonathan Chen">
+        <meta name="description" content="Keep curious!">
+        <meta name="keywords" content="blog, technology, python, pythonista, programming, developer, software developer, software engineer, azure, cloud, cloud computing, testing, clean code">
+        <meta name="generator" content="Hugo 0.54.0" />
+        <title> Express | Jonathan Chen&#39;s Blog</title>
+        <meta name="description" content="Express - Keep curious!">
+        <meta itemprop="name" content="Express">
+        <meta itemprop="description" content="Express - Keep curious!">
+        <meta property="og:title" content="Express">
+        <meta property="og:description" content="Express - Keep curious!">
+        <meta property="og:image" content="https://www.gravatar.com/avatar/73e7f10f7883ff287d4571c4c190fd93?size=200">
+        <meta property="og:url" content="https://mscb402.github.io/tags/express/">
+        <meta property="og:site_name" content="Jonathan Chen&#39;s Blog"><meta property="og:type" content="website">
+        <link rel="icon" type="image/png" href="https://mscb402.github.io/favicon-32x32.png" sizes="32x32">
+        <link rel="icon" type="image/png" href="https://mscb402.github.io/favicon-16x16.png" sizes="16x16">
+
+	
+	  <link href="https://mscb402.github.io/tags/express/index.xml" rel="alternate" type="application/rss+xml" title="Jonathan Chen&#39;s Blog" />
+	  <link href="https://mscb402.github.io/tags/express/index.xml" rel="feed" type="application/rss+xml" title="Jonathan Chen&#39;s Blog" />
+	
+
+        
+        <link rel="stylesheet" href="https://mscb402.github.io/sass/theme.min.7f4b7ce40e75c56b2479c669b6e33cd1381e870b71fcf495203cc50ba0259faa.css">
+
+        
+
+        
+            
+        
+    </head>
+    <body class="bilberry-hugo-theme">
+        
+<nav>
+
+    <div class="container">
+        <ul class="topnav">
+            
+                
+                    <li><a href="https://github.com/mscb402" target="_blank">Github</a></li>
+                
+            
+                
+                    <li><a href="/page/about/">关于我</a></li>
+                
+            
+        </ul>
+
+        
+    </div>
+</nav>
+
+
+        <header>
+    <div class="container">
+        <div class="logo">
+            <a href="/page/about/" class="logo">
+                
+                    <img src="https://www.gravatar.com/avatar/73e7f10f7883ff287d4571c4c190fd93?d=mm&size=200" alt="">
+                
+
+                <span class="overlay"><i class="fa fa-home"></i></span>
+            </a>
+        </div>
+        <div class="titles">
+            <h3 class="title"><a href="/">Jonathan Chen&#39;s Blog</a>
+            </h3>
+            
+                <span class="subtitle">Keep curious!</span>
+            
+            <h3 class="title">
+                <div class="social-media">
+                    
+                        <a href="https://twitter.com/chenbeng1" target="_blank"><i class="fa fa-twitter"></i></a>
+                    
+                    
+                        <a href="https://github.com/mscb402" target="_blank"><i class="fa fa-github"></i></a>
+                    
+                    
+                    
+                    
+                </div>
+            </h3>
+        </div>
+
+    
+
+        
+        <div class="toggler">
+        
+            <i class="fa fa-bars" aria-hidden="true"></i>
+        </div>
+    </div>
+</header>
+
+
+        <div class="main container">
+            
+    
+    
+        <div class="article-wrapper u-cf">
+            
+                <a class="bubble" href="/article/2019-6-9/">
+    <i class="fa fa-fw fa-pencil"></i>
+</a>
+
+<article class="default article">
+    
+
+    <div class="content">
+    <h3><a href="/article/2019-6-9/">用Redis和JavaScript/express实现一个RateLimit截流器</a></h3>
+    <div class="meta">
+        
+            
+                <span class="date moment">2019-06-09</span>
+            
+        
+
+        
+
+        
+            <span class="categories">
+                
+                    <a href="/categories/%E6%8A%80%E6%9C%AF">技术</a>
+                
+                    <a href="/categories/redis">Redis</a>
+                
+                    <a href="/categories/javascript">JavaScript</a>
+                
+            </span>
+        
+
+        
+            <span class="author"><a href="/author/jonathan-chen">Jonathan Chen</a></span>
+        
+    </div>
+
+    
+        RateLimit截流器，其实是一个比较有用的东西。他可以防止某些API被盗刷。举个例子，我们平常都会需要“发送手机短信验证码”的API，这都是需要按次数收费的，而且相对来说价格也挺昂贵。如果不加以限制，那分分钟被刷爆。有可能会被某些不法分子用于短信炸弹的非法用途，或者有些人只是单纯的对网站进行攻击，增加平台的支出。当然这些都有很多种方法去防范，最简单的就是加一个验证码了。
+不过作为API底层，我们肯定需要做好万全的准备，不能真的等出问题了才开始防范。我们可以一开始就限制某个API接口等最大请求量。
+这有两个好处。
+第一个好处是，可以在前面的防守都失败以后，保证最后一层“堡垒”不会被攻下，可以把损失降到最低。
+第二个好处是，可以保证服务器稳定运行，每个服务器都有一定的承受量，一旦流量过大（可能是CC攻击，也可能是正常用户），可能会导致服务器产生OutOfMemory等错误，这会让程序或者系统奔溃。如果发生这种情况，将会影响大批量的用户。
+综上所述，我们需要有一个截流器来负责流量的过滤。过滤以后可以通过一些控制，把流量转移到另外一台空闲的服务器上，当然直接拒绝请求也可以（如果你们老板没意见的话）。
+正文 RateLimit，这个是我前几个月在应聘某家公司时候出的笔试题。今天无意中翻到，所以，拿出来与各位分享分享。
+以下是公司的笔试题目：
+ 用 Redis 和 Typescript / JavaScript 实现一个 RateLimit 限制器，可以指定事件、限制时间、限制次数，例如限制 1 分钟内最多 3 次获取短信验证码，或 10 分钟内最多一次重置密码。
+
+        
+            <a href="/article/2019-6-9/" class="more">继续阅读</a>
+        
+    
+</div>
+
+    
+<div class="footer">
+
+
+    
+        <div class="tags">
+            <i class="fa fa-tags"></i>
+            <div class="links">
+                
+                    <a href="/tags/ratelimit">RateLimit</a>
+                
+                    <a href="/tags/%E6%88%AA%E6%B5%81%E5%99%A8">截流器</a>
+                
+                    <a href="/tags/redis">Redis</a>
+                
+                    <a href="/tags/javascript">JavaScript</a>
+                
+                    <a href="/tags/express">express</a>
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+</article>
+
+            
+        </div>
+    
+
+    
+    <div class="paginator">
+        
+
+        
+    </div>
+
+
+
+        </div>
+
+        
+<footer>
+    <div class="container">
+
+        
+        <div class="recent-posts">
+            <strong>最新帖子</strong>
+                <ul>
+                
+                    <li>
+                        <a href="/article/2019-6-9/">用Redis和JavaScript/express实现一个RateLimit截流器</a>
+                    </li>
+                
+                    <li>
+                        <a href="/article/2019-6-8/">拒绝网络暴力！基于深度学习的网络欺凌检测</a>
+                    </li>
+                
+                    <li>
+                        <a href="/article/2019-5-12/">PHP协程之路-协程实现</a>
+                    </li>
+                
+                    <li>
+                        <a href="/article/2019-5-1/">PHP协程之路-事件循环Event Loop</a>
+                    </li>
+                
+                    <li>
+                        <a href="/article/2019-4-21/">PHP协程之路-yield from和协程初步</a>
+                    </li>
+                
+                    <li>
+                        <a href="/article/2019-4-7/">PHP协程之路-yield语法糖</a>
+                    </li>
+                
+                </ul>
+        </div>
+        
+
+        
+        <div class="categories">
+            <a href="/categories/"><strong>分类</strong></a>
+                <ul>
+                
+                    <li>
+                        <a href="/categories/%E6%8A%80%E6%9C%AF">技术 (7)</a>
+                    </li>
+                
+                    <li>
+                        <a href="/categories/%E6%8A%80%E6%9C%AF%E6%A6%82%E5%BF%B5">技术概念 (4)</a>
+                    </li>
+                
+                    <li>
+                        <a href="/categories/php">Php (2)</a>
+                    </li>
+                
+                    <li>
+                        <a href="/categories/javascript">Javascript (1)</a>
+                    </li>
+                
+                    <li>
+                        <a href="/categories/python">Python (1)</a>
+                    </li>
+                
+                    <li>
+                        <a href="/categories/redis">Redis (1)</a>
+                    </li>
+                
+            </ul>
+        </div>
+        
+
+        <div class="right">
+            
+            <div class="external-profiles">
+                <strong>社交媒体</strong>
+
+                
+                
+                    <a href="https://twitter.com/chenbeng1" target="_blank"><i class="fa fa-twitter-adblock-proof"></i></a>
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                    <a href="https://github.com/mscb402" target="_blank"><i class="fa fa-github"></i></a>
+                
+                
+            </div>
+            
+
+            
+        </div>
+    </div>
+</footer>
+
+
+<div class="credits">
+    <div class="container">
+        <div class="copyright">
+            <a href="https://github.com/mscb402" target="_blank">
+                &copy;
+                
+                    2019
+                
+                by Chen Beng (Jonathan Chen)
+            </a>
+	    -
+		<a href="https://mscb402.github.io/tags/express/index.xml">RSS</a>
+        </div>
+        <div class="author">
+            <a href="https://github.com/Lednerb/bilberry-hugo-theme" target="_blank">Bilberry Hugo Theme</a>
+        </div>
+    </div>
+</div>
+
+
+        
+
+        
+
+        
+        
+        <script type="text/javascript" src="https://mscb402.github.io/js/externalDependencies.2a3cf2b558bd16302d997f6c20de885831fe6e39f05a054ddede6211a4a78d882081b58973893707bbefb74dc3611b37e66edb04bc5f075f4a198b2d135d96ae.js" integrity="sha512-KjzytVi9FjAtmX9sIN6IWDH&#43;bjnwWgVN3t5iEaSnjYgggbWJc4k3B7vvt03DYRs35m7bBLxfB19KGYstE12Wrg=="></script>
+
+        
+        
+        <script type="text/javascript" src="https://mscb402.github.io/js/theme.ba9945b0c16d4ddb26fd4bd58193d268e92614f0c74cced07d6d8641ac7564d7.js" integrity="sha256-uplFsMFtTdsm/UvVgZPSaOkmFPDHTM7QfW2GQax1ZNc="></script>
+
+        <script>
+            $(".moment").each(function() {
+                $(this).text(
+                    moment( $(this).text() )
+                        .locale( "zh-cn" )
+                        .format('LL')
+                );
+            });
+
+            $(".footnote-return sup").html("【返回】");
+        </script>
+
+        
+            
+        
+
+        
+
+
+    </body>
+</html>

@@ -5,10 +5,27 @@
     <link>https://mscb402.github.io/author/jonathan-chen/</link>
     <description>Recent content in Jonathan Chen on Jonathan Chen&#39;s Blog</description>
     <generator>Hugo -- gohugo.io</generator>
-    <lastBuildDate>Sat, 08 Jun 2019 09:46:53 +0800</lastBuildDate>
+    <lastBuildDate>Sun, 09 Jun 2019 11:00:42 +0800</lastBuildDate>
     
 	<atom:link href="https://mscb402.github.io/author/jonathan-chen/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>用Redis和JavaScript/express实现一个RateLimit截流器</title>
+      <link>https://mscb402.github.io/article/2019-6-9/</link>
+      <pubDate>Sun, 09 Jun 2019 11:00:42 +0800</pubDate>
+      
+      <guid>https://mscb402.github.io/article/2019-6-9/</guid>
+      <description>RateLimit截流器，其实是一个比较有用的东西。他可以防止某些API被盗刷。举个例子，我们平常都会需要“发送手机短信验证码”的API，这都是需要按次数收费的，而且相对来说价格也挺昂贵。如果不加以限制，那分分钟被刷爆。有可能会被某些不法分子用于短信炸弹的非法用途，或者有些人只是单纯的对网站进行攻击，增加平台的支出。当然这些都有很多种方法去防范，最简单的就是加一个验证码了。
+不过作为API底层，我们肯定需要做好万全的准备，不能真的等出问题了才开始防范。我们可以一开始就限制某个API接口等最大请求量。
+这有两个好处。
+第一个好处是，可以在前面的防守都失败以后，保证最后一层“堡垒”不会被攻下，可以把损失降到最低。
+第二个好处是，可以保证服务器稳定运行，每个服务器都有一定的承受量，一旦流量过大（可能是CC攻击，也可能是正常用户），可能会导致服务器产生OutOfMemory等错误，这会让程序或者系统奔溃。如果发生这种情况，将会影响大批量的用户。
+综上所述，我们需要有一个截流器来负责流量的过滤。过滤以后可以通过一些控制，把流量转移到另外一台空闲的服务器上，当然直接拒绝请求也可以（如果你们老板没意见的话）。
+正文 RateLimit，这个是我前几个月在应聘某家公司时候出的笔试题。今天无意中翻到，所以，拿出来与各位分享分享。
+以下是公司的笔试题目：
+ 用 Redis 和 Typescript / JavaScript 实现一个 RateLimit 限制器，可以指定事件、限制时间、限制次数，例如限制 1 分钟内最多 3 次获取短信验证码，或 10 分钟内最多一次重置密码。</description>
+    </item>
     
     <item>
       <title>拒绝网络暴力！基于深度学习的网络欺凌检测</title>

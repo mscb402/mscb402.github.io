@@ -3,6 +3,11 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
+    <loc>https://mscb402.github.io/article/2019-6-9/</loc>
+    <lastmod>2019-06-09T11:00:42+08:00</lastmod>
+  </url>
+  
+  <url>
     <loc>https://mscb402.github.io/article/2019-6-8/</loc>
     <lastmod>2019-06-08T09:46:53+08:00</lastmod>
   </url>
@@ -49,7 +54,7 @@
   
   <url>
     <loc>https://mscb402.github.io/article/</loc>
-    <lastmod>2019-06-08T09:46:53+08:00</lastmod>
+    <lastmod>2019-06-09T11:00:42+08:00</lastmod>
     <priority>0</priority>
   </url>
   
@@ -64,14 +69,32 @@
   </url>
   
   <url>
+    <loc>https://mscb402.github.io/tags/express/</loc>
+    <lastmod>2019-06-09T11:00:42+08:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>https://mscb402.github.io/tags/javascript/</loc>
+    <lastmod>2019-06-09T11:00:42+08:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>https://mscb402.github.io/categories/javascript/</loc>
+    <lastmod>2019-06-09T11:00:42+08:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
     <loc>https://mscb402.github.io/author/jonathan-chen/</loc>
-    <lastmod>2019-06-08T09:46:53+08:00</lastmod>
+    <lastmod>2019-06-09T11:00:42+08:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
     <loc>https://mscb402.github.io/</loc>
-    <lastmod>2019-06-08T09:46:53+08:00</lastmod>
+    <lastmod>2019-06-09T11:00:42+08:00</lastmod>
     <priority>0</priority>
   </url>
   
@@ -106,8 +129,26 @@
   </url>
   
   <url>
+    <loc>https://mscb402.github.io/tags/ratelimit/</loc>
+    <lastmod>2019-06-09T11:00:42+08:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>https://mscb402.github.io/tags/redis/</loc>
+    <lastmod>2019-06-09T11:00:42+08:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>https://mscb402.github.io/categories/redis/</loc>
+    <lastmod>2019-06-09T11:00:42+08:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
     <loc>https://mscb402.github.io/tags/</loc>
-    <lastmod>2019-04-07T12:18:31+08:00</lastmod>
+    <lastmod>2019-06-09T11:00:42+08:00</lastmod>
     <priority>0</priority>
   </url>
   
@@ -134,6 +175,12 @@
   </url>
   
   <url>
+    <loc>https://mscb402.github.io/tags/%E6%88%AA%E6%B5%81%E5%99%A8/</loc>
+    <lastmod>2019-06-09T11:00:42+08:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
     <loc>https://mscb402.github.io/tags/%E6%8A%80%E6%9C%AF/</loc>
     <lastmod>2019-04-07T12:18:31+08:00</lastmod>
     <priority>0</priority>
@@ -141,7 +188,7 @@
   
   <url>
     <loc>https://mscb402.github.io/categories/%E6%8A%80%E6%9C%AF/</loc>
-    <lastmod>2019-05-12T10:35:27+08:00</lastmod>
+    <lastmod>2019-06-09T11:00:42+08:00</lastmod>
     <priority>0</priority>
   </url>
   

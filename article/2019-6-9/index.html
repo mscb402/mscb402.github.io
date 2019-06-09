@@ -1,0 +1,758 @@
+<!doctype html>
+<html class="no-js" lang="zh-cn">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="author" content="Jonathan Chen">
+        <meta name="description" content="Keep curious!">
+        <meta name="keywords" content="blog, technology, python, pythonista, programming, developer, software developer, software engineer, azure, cloud, cloud computing, testing, clean code">
+        <meta name="generator" content="Hugo 0.54.0" />
+        <title> 用Redis和JavaScript/express实现一个RateLimit截流器 | Jonathan Chen&#39;s Blog</title>
+        <meta name="description" content="用Redis和JavaScript/express实现一个RateLimit截流器 - Keep curious!">
+        <meta itemprop="name" content="用Redis和JavaScript/express实现一个RateLimit截流器">
+        <meta itemprop="description" content="用Redis和JavaScript/express实现一个RateLimit截流器 - Keep curious!">
+        <meta property="og:title" content="用Redis和JavaScript/express实现一个RateLimit截流器">
+        <meta property="og:description" content="用Redis和JavaScript/express实现一个RateLimit截流器 - Keep curious!">
+        <meta property="og:image" content="https://www.gravatar.com/avatar/73e7f10f7883ff287d4571c4c190fd93?size=200">
+        <meta property="og:url" content="https://mscb402.github.io/article/2019-6-9/">
+        <meta property="og:site_name" content="Jonathan Chen&#39;s Blog">
+        <meta property="og:type" content="article">
+        <link rel="icon" type="image/png" href="https://mscb402.github.io/favicon-32x32.png" sizes="32x32">
+        <link rel="icon" type="image/png" href="https://mscb402.github.io/favicon-16x16.png" sizes="16x16">
+
+	
+
+        
+        <link rel="stylesheet" href="https://mscb402.github.io/sass/theme.min.7f4b7ce40e75c56b2479c669b6e33cd1381e870b71fcf495203cc50ba0259faa.css">
+
+        
+
+        
+            
+        
+    </head>
+    <body class="bilberry-hugo-theme">
+        
+<nav>
+
+    <div class="container">
+        <ul class="topnav">
+            
+                
+                    <li><a href="https://github.com/mscb402" target="_blank">Github</a></li>
+                
+            
+                
+                    <li><a href="/page/about/">关于我</a></li>
+                
+            
+        </ul>
+
+        
+    </div>
+</nav>
+
+
+        <header>
+    <div class="container">
+        <div class="logo">
+            <a href="/page/about/" class="logo">
+                
+                    <img src="https://www.gravatar.com/avatar/73e7f10f7883ff287d4571c4c190fd93?d=mm&size=200" alt="">
+                
+
+                <span class="overlay"><i class="fa fa-home"></i></span>
+            </a>
+        </div>
+        <div class="titles">
+            <h3 class="title"><a href="/">Jonathan Chen&#39;s Blog</a>
+            </h3>
+            
+                <span class="subtitle">Keep curious!</span>
+            
+            <h3 class="title">
+                <div class="social-media">
+                    
+                        <a href="https://twitter.com/chenbeng1" target="_blank"><i class="fa fa-twitter"></i></a>
+                    
+                    
+                        <a href="https://github.com/mscb402" target="_blank"><i class="fa fa-github"></i></a>
+                    
+                    
+                    
+                    
+                </div>
+            </h3>
+        </div>
+
+    
+
+        
+        <div class="toggler">
+        
+            <i class="fa fa-bars" aria-hidden="true"></i>
+        </div>
+    </div>
+</header>
+
+
+        <div class="main container">
+            
+     
+    <div class="article-wrapper u-cf single">
+        
+            <a class="bubble" href="/article/2019-6-9/">
+    <i class="fa fa-fw fa-pencil"></i>
+</a>
+
+<article class="default article">
+    
+
+    <div class="content">
+    <h3><a href="/article/2019-6-9/">用Redis和JavaScript/express实现一个RateLimit截流器</a></h3>
+    <div class="meta">
+        
+            
+                <span class="date moment">2019-06-09</span>
+            
+        
+
+        
+
+        
+            <span class="categories">
+                
+                    <a href="/categories/%E6%8A%80%E6%9C%AF">技术</a>
+                
+                    <a href="/categories/redis">Redis</a>
+                
+                    <a href="/categories/javascript">JavaScript</a>
+                
+            </span>
+        
+
+        
+            <span class="author"><a href="/author/jonathan-chen">Jonathan Chen</a></span>
+        
+    </div>
+
+    
+        
+
+<p>RateLimit截流器，其实是一个比较有用的东西。他可以防止某些API被盗刷。举个例子，我们平常都会需要“发送手机短信验证码”的API，这都是需要按次数收费的，而且相对来说价格也挺昂贵。如果不加以限制，那分分钟被刷爆。有可能会被某些不法分子用于短信炸弹的非法用途，或者有些人只是单纯的对网站进行攻击，增加平台的支出。当然这些都有很多种方法去防范，最简单的就是加一个验证码了。</p>
+
+<p>不过作为API底层，我们肯定需要做好万全的准备，不能真的等出问题了才开始防范。我们可以一开始就限制某个API接口等最大请求量。</p>
+
+<p>这有两个好处。</p>
+
+<p>第一个好处是，可以在前面的防守都失败以后，保证最后一层“堡垒”不会被攻下，可以把损失降到最低。</p>
+
+<p>第二个好处是，可以保证服务器稳定运行，每个服务器都有一定的承受量，一旦流量过大（可能是CC攻击，也可能是正常用户），可能会导致服务器产生OutOfMemory等错误，这会让程序或者系统奔溃。如果发生这种情况，将会影响大批量的用户。</p>
+
+<p>综上所述，我们需要有一个截流器来负责流量的过滤。过滤以后可以通过一些控制，把流量转移到另外一台空闲的服务器上，当然直接拒绝请求也可以（如果你们老板没意见的话）。</p>
+
+<h1 id="正文">正文</h1>
+
+<p><strong>RateLimit，这个是我前几个月在应聘某家公司时候出的笔试题。今天无意中翻到，所以，拿出来与各位分享分享。</strong></p>
+
+<p>以下是公司的笔试题目：</p>
+
+<blockquote>
+<p>用 Redis 和 Typescript / JavaScript 实现一个 RateLimit 限制器，可以指定事件、限制时间、限制次数，例如限制 1 分钟内最多 3 次获取短信验证码，或 10 分钟内最多一次重置密码。</p>
+
+<p>可以实现为一个 express 的中间件。</p>
+</blockquote>
+
+<h3 id="基本思路">基本思路</h3>
+
+<p>截流器的实现，网络上有很多。以前有了解过一种基于“令牌桶”的截流算法。也确实效果不错。但是具体情况具体分析，需要另外开一个程序去不断的刷新令牌桶内的令牌数量，其实也是蛮耗费资源的。当然合理的实现技巧，不会太差。我主要是觉得“令牌桶”不是适合这个题目的情境。我个人是比较喜欢简洁的东西，如果能更加简洁方便的实现这种功能，并不一定要搞得那么麻烦。至少在目前这个需求下也许并不是特别适合。</p>
+
+<p>代码里的这个方法，是我脑子一下子就想到的，也许并不很完美，有我考虑不够周到的地方。</p>
+
+<p>主要思想是，为每一个事件建立一个Redis的list键。每一次请求发送过来，去取list的第前N个索引，这里的N是<strong>限制的次数</strong>，如果限制2次，N就是2。每一个LIST的值保存的是请求到达的时间，第前N个索引，就是第前N次请求到达的时间。如果这个时间和当前的时间相减的expire小于<strong>限制时间</strong>，那什么规定时间内，请求已经到达上限，对其阻止。</p>
+
+<p>可能表述的还是不够清晰，直观。可以直接看<code>redis.lua</code>里的代码，毕竟‘talk is cheap，show me the code’😊</p>
+
+<h3 id="代码结构">代码结构</h3>
+
+<p>./eventBuilder.js 事件构建器，方便生成指定事件。代码如下</p>
+
+<pre><code class="language-javascript">class eventBuilder{
+    constructor(){
+        this.event_name = ''; //事件名称，便于分辨
+        this.event_id = &quot;&quot;; //事件ID，需要自定义，数字和英文组合
+        this.limit_count = 60; //限制流量截流数量
+        this.time_period = 60; //限制流量截流周期，单位为秒
+    }
+    /** 事件名称 */
+    EventName(data){
+        this.event_name = data;
+        return this;
+    }
+    /** 事件ID，数字和英文组合 */
+    EventID(data){
+        this.event_id = data;
+        return this;
+    }
+    /** 限制流量截流数量  */
+    LimitCount(data){
+        this.limit_count = data;
+        return this;
+    }
+    /** 限制流量截流周期，单位为秒 */
+    TimePeriod(data){
+        this.time_period = data;
+        return this;
+    }
+    
+}
+module.exports = new eventBuilder();
+</code></pre>
+
+<p>./rateLimit.js 截流器源代码。代码如下</p>
+
+<pre><code class="language-javascript">const app = require('express');
+const redis = require(&quot;redis&quot;);
+const fs = require(&quot;fs&quot;)
+const {promisify} = require('util');
+var client = redis.createClient();
+/**
+ * 截流器
+ */
+class rateLimit{
+
+     constructor(){
+        //初始化
+        this.hash = null;
+        this.luaCode = fs.readFileSync('redis.lua');
+        //因为该代码是在程序开启后初始化的时候才执行，所以采用同步读取，不会影响性能。
+        this.Event = {};
+    }
+
+    /**
+     * 启动前，必须调用init，加载lua脚本。否则无法使用
+     * 返回一个promise对象
+     */
+    init(){
+        //构建promise
+        let client_script = promisify(client.script).bind(client);
+        
+        return client_script('load', this.luaCode)
+        .then( (reply)=&gt;{
+
+            this.hash = reply;
+
+        }).catch(err =&gt;{
+
+            console.log('err:'+err);
+
+        });
+    }
+
+    /**
+     * 根据事件ID获取对应的路由，成功返回路由，失败返回null
+     * @param {String} event_id 事件ID
+     */
+    getRouter(event_id){
+        if(this.Event[event_id] === undefined){
+            return null;
+        }
+        return this.Event[event_id].router;
+    }
+
+    /**
+     * 添加新的事件到截流器中，建议使用eventBuilder
+     * @param {Object} pros 
+        pros{
+            event_name:&quot;&quot;, //事件名称，便于分辨
+            event_id:&quot;&quot;,   //事件ID，需要自定义，数字和英文组合
+            limit_count:1, //限制流量截流数量
+            time_period:60 //限制流量截流周期，单位为秒
+        }
+     * @return index 返回对应的index
+     */
+    addNewEvent(pros){
+        if(pros['event_id'] === undefined){
+            throw 'pros ERROR, please fix that!';
+        }
+        let event_id = pros.event_id;
+        this.Event[event_id] = pros
+        this.Event[event_id]['router'] = app.Router().use('/',this.limitFuncFactory(event_id));
+        return true;
+    }
+
+    /**
+     * 截流器工厂函数，专门用于生产带有截流功能的路由函数
+     * @param {String} event_id 事件ID
+     */
+    limitFuncFactory(event_id){
+
+        let event = this.Event[event_id];
+
+        return (req,res,next)=&gt;{
+            let handle = (err,reply)=&gt;{
+
+                if(err != null){
+                    //如果lua脚本执行出现错误，也进行截流 
+                    //一般不会执行到这里
+                    res.status(400).send(&quot;Limit&quot;);
+                    console.log(&quot;Something wrong :&quot; + err);
+                }
+
+                //lua脚本返回“OK”和“NO”，ok表示当前流量可以通过。
+                if(reply == &quot;OK&quot;){
+                    next()
+                }else{
+                    res.status(400).send(&quot;Limit&quot;);
+                }
+
+                
+            }
+            //执行对应的lua脚本
+            client.evalsha(this.hash, 1, event.event_id, event.limit_count, event.time_period, handle)
+        }
+        
+    }
+    
+}
+
+module.exports = new rateLimit();
+</code></pre>
+
+<p>./redis.lua 负责截流算法的实现，使用lua是为了能让redis实现原子操作.。代码如下</p>
+
+<pre><code class="language-lua">local eventX = 'EVENT_'..KEYS[1] --事件ID--
+local count = tonumber(ARGV[1]) --限制总数--
+local nowTime = redis.call('TIME') --当前时间--
+local t = nowTime[1] --当前时间戳--
+local expire = tonumber(ARGV[2]) --过期时间，秒--
+
+-- Pass函数，当条件允许时，处理后事 --
+local function Pass()
+  redis.call('LPUSH',eventX,t)
+end
+
+-- 需要清理之前过期的token，保留当前个数 --
+local function Trim()
+  redis.call('ltrim',eventX,0,count-1)
+end
+
+-- 总数为0，直接就禁止访问 --
+if(count == nil or count &lt;= 0)
+then
+  return 'NO'
+end
+
+-- 获取当前事件list的个数，小于总数都允许直接通过 --
+if(redis.call('LLEN',eventX) &lt; count)
+then
+  Pass()
+  return 'OK'
+end
+
+local index = count - 1
+
+-- 获取第count个值里保存的时间 --
+local begin_time = redis.call('LINDEX',eventX,index)
+
+-- 时间为空，可能是list不够大，直接通过 --
+if(begin_time == nil)
+then
+  Pass()
+  return 'OK'
+end
+
+-- 当前时间减去第count的时间，如果在过期时间内 --
+-- 表示在给定的过期时间内，我们允许的最多count个访问已经填满了--
+-- 所以不允许访问 --
+if(t - begin_time &lt;= expire)
+then
+  return 'NO'
+else
+  -- 否则，直接pass --
+  Pass()
+  -- 顺手清理一下之前的数据 --
+  Trim() 
+  return 'OK'
+end
+</code></pre>
+
+<p>./index.js 利用截流器的一个小例子，开启本地8088端口，并以中间件的形式插入到 /test 路由中</p>
+
+<pre><code class="language-javascript">const express = require('express')
+const app = express()
+const rateLimit = require(&quot;./rateLimit&quot;)
+const eventBuilder = require('./eventBuilder')
+
+rateLimit.init().then(()=&gt;{
+    //生成一个20秒内，只允许访问2次的事件
+    let event = eventBuilder.EventName(&quot;测试截流&quot;)
+                            .EventID('testLimit')
+                            .LimitCount(40)
+                            .TimePeriod(5);
+
+    //添加到截流器中
+    rateLimit.addNewEvent(event);
+
+    //获得事件的路由
+    let rout = rateLimit.getRouter('testLimit')
+    if(rout == null){
+        throw &quot;路由器为空&quot;
+    }
+    
+    //以中间件的形势插入到 /test 路由中
+    app.get('/test', [rout, (req,res)=&gt;{
+        console.log('#');
+        res.send(&quot;&lt;h1&gt;HELLO WORLD&lt;/h1&gt;&quot;);
+    }] );
+
+
+}).catch(err=&gt;{
+    console.error(err)
+})
+
+app.listen('8088', () =&gt; console.log(`服务器启动成功！`))
+
+</code></pre>
+
+<p><strong>需要依赖的包：</strong><code>&quot;express&quot;: &quot;^4.16.4&quot;</code>,<code>&quot;redis&quot;: &quot;^2.8.0&quot;</code></p>
+
+<h2 id="测试">测试</h2>
+
+<p>为了方便测试，在路由内输出‘#’作为请求的响应（确实比较傻，这个方法。数的累死）</p>
+
+<pre><code class="language-javascript">app.get('/test', [rout, (req,res)=&gt;{
+        console.log('#');
+        res.send(&quot;&lt;h1&gt;HELLO WORLD&lt;/h1&gt;&quot;);
+    }] );
+</code></pre>
+
+<p>使用wrk进行测试</p>
+
+<p>电脑配置：MacBook air 2017版本</p>
+
+<h3 id="可用性测试1">可用性测试1</h3>
+
+<p>wrk配置</p>
+
+<pre><code>wrk -t 5 -c 20 -d 20 http://localhost:8088/test
+</code></pre>
+
+<p>5个线程，同时维持20个请求，持续周期20秒</p>
+
+<p>事件配置：</p>
+
+<p>20秒内，20个响应</p>
+
+<pre><code class="language-js">let event = eventBuilder.EventName(&quot;测试截流&quot;)
+                        .EventID('testLimit')
+                        .LimitCount(20)
+                        .TimePeriod(20);
+</code></pre>
+
+<p>测试结果：</p>
+
+<p>wrk结果</p>
+
+<pre><code>Running 20s test @ http://localhost:8088/test
+  5 threads and 20 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency     3.24ms    1.32ms  41.20ms   93.47%
+    Req/Sec     1.26k   218.45     1.52k    82.20%
+  125121 requests in 20.01s, 25.89MB read
+  Non-2xx or 3xx responses: 125101
+Requests/sec:   6251.45
+Transfer/sec:      1.29MB
+</code></pre>
+
+<p>nodejs输出：</p>
+
+<p>正常，输出20个“#”</p>
+
+<h3 id="可用性测试2">可用性测试2</h3>
+
+<p>wrk配置</p>
+
+<pre><code>wrk -t 5 -c 20 -d 5 http://localhost:8088/test
+</code></pre>
+
+<p>5个线程，同时维持20个请求，持续周期5秒</p>
+
+<p>事件配置：</p>
+
+<p>5秒内，40个响应</p>
+
+<pre><code class="language-js">let event = eventBuilder.EventName(&quot;测试截流&quot;)
+                        .EventID('testLimit')
+                        .LimitCount(40)
+                        .TimePeriod(5);
+</code></pre>
+
+<p>测试结果：</p>
+
+<p>wrk结果</p>
+
+<pre><code>Running 5s test @ http://localhost:8088/test
+  5 threads and 20 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency     4.09ms    2.52ms  43.84ms   94.64%
+    Req/Sec     1.03k   234.50     1.40k    68.00%
+  25550 requests in 5.01s, 5.29MB read
+  Non-2xx or 3xx responses: 25510
+Requests/sec:   5102.71
+Transfer/sec:      1.06MB
+</code></pre>
+
+<p>nodejs输出：</p>
+
+<p>正常，输出40个“#”</p>
+
+<h3 id="正确性测试-redis内查看token">正确性测试：redis内查看token</h3>
+
+<p>代码：<code>lrange EVENT_testLimit 0 -1</code></p>
+
+<p>返回：40个请求时间戳</p>
+
+<pre><code> 1) &quot;1554893376&quot;
+ 2) &quot;1554893376&quot;
+ 3) &quot;1554893376&quot;
+ 4) &quot;1554893376&quot;
+ 5) &quot;1554893376&quot;
+ 6) &quot;1554893376&quot;
+ 7) &quot;1554893376&quot;
+ 8) &quot;1554893376&quot;
+ 9) &quot;1554893376&quot;
+10) &quot;1554893376&quot;
+11) &quot;1554893376&quot;
+12) &quot;1554893376&quot;
+13) &quot;1554893376&quot;
+14) &quot;1554893376&quot;
+15) &quot;1554893376&quot;
+16) &quot;1554893376&quot;
+17) &quot;1554893376&quot;
+18) &quot;1554893376&quot;
+19) &quot;1554893376&quot;
+20) &quot;1554893376&quot;
+21) &quot;1554893376&quot;
+22) &quot;1554893376&quot;
+23) &quot;1554893376&quot;
+24) &quot;1554893376&quot;
+25) &quot;1554893376&quot;
+26) &quot;1554893376&quot;
+27) &quot;1554893376&quot;
+28) &quot;1554893376&quot;
+29) &quot;1554893376&quot;
+30) &quot;1554893376&quot;
+31) &quot;1554893376&quot;
+32) &quot;1554893376&quot;
+33) &quot;1554893376&quot;
+34) &quot;1554893376&quot;
+35) &quot;1554893376&quot;
+36) &quot;1554893376&quot;
+37) &quot;1554893376&quot;
+38) &quot;1554893376&quot;
+39) &quot;1554893376&quot;
+40) &quot;1554893376&quot;
+</code></pre>
+
+<h3 id="总结">总结</h3>
+
+<p>以上测试说明，在短时间内大量的请求同时发送，不会破坏程序的正确性和可用性。最好通过查看redis内的数据，可以确保，不会因为访问人数太大而，占用redis大量的内存，影响性能。redis下最多只会保存N个请求数据，N表示限制的请求个数。</p>
+
+<hr />
+
+<p><em>注意：本文未经许可，不得转载</em></p>
+
+    
+</div>
+
+    
+<div class="footer">
+
+
+    
+        <div class="tags">
+            <i class="fa fa-tags"></i>
+            <div class="links">
+                
+                    <a href="/tags/ratelimit">RateLimit</a>
+                
+                    <a href="/tags/%E6%88%AA%E6%B5%81%E5%99%A8">截流器</a>
+                
+                    <a href="/tags/redis">Redis</a>
+                
+                    <a href="/tags/javascript">JavaScript</a>
+                
+                    <a href="/tags/express">express</a>
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+</article>
+
+        
+    </div>
+
+    
+        
+    
+
+     
+
+        </div>
+
+        
+<footer>
+    <div class="container">
+
+        
+        <div class="recent-posts">
+            <strong>最新帖子</strong>
+                <ul>
+                
+                    <li>
+                        <a href="/article/2019-6-9/">用Redis和JavaScript/express实现一个RateLimit截流器</a>
+                    </li>
+                
+                    <li>
+                        <a href="/article/2019-6-8/">拒绝网络暴力！基于深度学习的网络欺凌检测</a>
+                    </li>
+                
+                    <li>
+                        <a href="/article/2019-5-12/">PHP协程之路-协程实现</a>
+                    </li>
+                
+                    <li>
+                        <a href="/article/2019-5-1/">PHP协程之路-事件循环Event Loop</a>
+                    </li>
+                
+                    <li>
+                        <a href="/article/2019-4-21/">PHP协程之路-yield from和协程初步</a>
+                    </li>
+                
+                    <li>
+                        <a href="/article/2019-4-7/">PHP协程之路-yield语法糖</a>
+                    </li>
+                
+                </ul>
+        </div>
+        
+
+        
+        <div class="categories">
+            <a href="/categories/"><strong>分类</strong></a>
+                <ul>
+                
+                    <li>
+                        <a href="/categories/%E6%8A%80%E6%9C%AF">技术 (7)</a>
+                    </li>
+                
+                    <li>
+                        <a href="/categories/%E6%8A%80%E6%9C%AF%E6%A6%82%E5%BF%B5">技术概念 (4)</a>
+                    </li>
+                
+                    <li>
+                        <a href="/categories/php">Php (2)</a>
+                    </li>
+                
+                    <li>
+                        <a href="/categories/javascript">Javascript (1)</a>
+                    </li>
+                
+                    <li>
+                        <a href="/categories/python">Python (1)</a>
+                    </li>
+                
+                    <li>
+                        <a href="/categories/redis">Redis (1)</a>
+                    </li>
+                
+            </ul>
+        </div>
+        
+
+        <div class="right">
+            
+            <div class="external-profiles">
+                <strong>社交媒体</strong>
+
+                
+                
+                    <a href="https://twitter.com/chenbeng1" target="_blank"><i class="fa fa-twitter-adblock-proof"></i></a>
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                    <a href="https://github.com/mscb402" target="_blank"><i class="fa fa-github"></i></a>
+                
+                
+            </div>
+            
+
+            
+        </div>
+    </div>
+</footer>
+
+
+<div class="credits">
+    <div class="container">
+        <div class="copyright">
+            <a href="https://github.com/mscb402" target="_blank">
+                &copy;
+                
+                    2019
+                
+                by Chen Beng (Jonathan Chen)
+            </a>
+	    
+        </div>
+        <div class="author">
+            <a href="https://github.com/Lednerb/bilberry-hugo-theme" target="_blank">Bilberry Hugo Theme</a>
+        </div>
+    </div>
+</div>
+
+
+        
+
+        
+
+        
+        
+        <script type="text/javascript" src="https://mscb402.github.io/js/externalDependencies.2a3cf2b558bd16302d997f6c20de885831fe6e39f05a054ddede6211a4a78d882081b58973893707bbefb74dc3611b37e66edb04bc5f075f4a198b2d135d96ae.js" integrity="sha512-KjzytVi9FjAtmX9sIN6IWDH&#43;bjnwWgVN3t5iEaSnjYgggbWJc4k3B7vvt03DYRs35m7bBLxfB19KGYstE12Wrg=="></script>
+
+        
+        
+        <script type="text/javascript" src="https://mscb402.github.io/js/theme.ba9945b0c16d4ddb26fd4bd58193d268e92614f0c74cced07d6d8641ac7564d7.js" integrity="sha256-uplFsMFtTdsm/UvVgZPSaOkmFPDHTM7QfW2GQax1ZNc="></script>
+
+        <script>
+            $(".moment").each(function() {
+                $(this).text(
+                    moment( $(this).text() )
+                        .locale( "zh-cn" )
+                        .format('LL')
+                );
+            });
+
+            $(".footnote-return sup").html("【返回】");
+        </script>
+
+        
+            
+        
+
+        
+
+
+    </body>
+</html>

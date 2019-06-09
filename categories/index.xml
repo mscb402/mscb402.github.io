@@ -10,6 +10,15 @@
     
     
     <item>
+      <title>Javascript</title>
+      <link>https://mscb402.github.io/categories/javascript/</link>
+      <pubDate>Sun, 09 Jun 2019 11:00:42 +0800</pubDate>
+      
+      <guid>https://mscb402.github.io/categories/javascript/</guid>
+      <description></description>
+    </item>
+    
+    <item>
       <title>Php</title>
       <link>https://mscb402.github.io/categories/php/</link>
       <pubDate>Sun, 07 Apr 2019 12:18:31 +0800</pubDate>
@@ -28,9 +37,18 @@
     </item>
     
     <item>
+      <title>Redis</title>
+      <link>https://mscb402.github.io/categories/redis/</link>
+      <pubDate>Sun, 09 Jun 2019 11:00:42 +0800</pubDate>
+      
+      <guid>https://mscb402.github.io/categories/redis/</guid>
+      <description></description>
+    </item>
+    
+    <item>
       <title>技术</title>
       <link>https://mscb402.github.io/categories/%E6%8A%80%E6%9C%AF/</link>
-      <pubDate>Sun, 12 May 2019 10:35:27 +0800</pubDate>
+      <pubDate>Sun, 09 Jun 2019 11:00:42 +0800</pubDate>
       
       <guid>https://mscb402.github.io/categories/%E6%8A%80%E6%9C%AF/</guid>
       <description></description>
