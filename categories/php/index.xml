@@ -5,10 +5,21 @@
     <link>https://mscb402.github.io/categories/php/</link>
     <description>Recent content in Php on Jonathan Chen&#39;s Blog</description>
     <generator>Hugo -- gohugo.io</generator>
-    <lastBuildDate>Sun, 07 Apr 2019 12:18:31 +0800</lastBuildDate>
+    <lastBuildDate>Sun, 14 Jul 2019 12:56:35 +0800</lastBuildDate>
     
 	<atom:link href="https://mscb402.github.io/categories/php/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>ReactPHP 源码阅读：EventLoop</title>
+      <link>https://mscb402.github.io/article/2019-7-14/</link>
+      <pubDate>Sun, 14 Jul 2019 12:56:35 +0800</pubDate>
+      
+      <guid>https://mscb402.github.io/article/2019-7-14/</guid>
+      <description>最近一直在忙工作上的事情，没有时间更新文章。今天抽空来更新一篇。今天我们来了解并阅读一下ReatPHP的源码。
+根据ReatPHP官网的介绍，我们可以了解到这是一个类似于JavaScript的“事件驱动”编程框架。
+ ReactPHP is a low-level library for event-driven programming in PHP. At its core is an event loop, on top of which it provides low-level utilities, such as: Streams abstraction, async DNS resolver, network client/server, HTTP client/server and interaction with processes.</description>
+    </item>
     
     <item>
       <title>PHP协程之路-yield语法糖</title>
