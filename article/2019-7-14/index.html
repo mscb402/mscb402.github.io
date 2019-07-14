@@ -1,0 +1,758 @@
+<!doctype html>
+<html class="no-js" lang="zh-cn">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="author" content="Jonathan Chen">
+        <meta name="description" content="Keep curious!">
+        <meta name="keywords" content="blog, technology, python, pythonista, programming, developer, software developer, software engineer, azure, cloud, cloud computing, testing, clean code">
+        <meta name="generator" content="Hugo 0.54.0" />
+        <title> ReactPHP 源码阅读：EventLoop | Jonathan Chen&#39;s Blog</title>
+        <meta name="description" content="ReactPHP 源码阅读：EventLoop - Keep curious!">
+        <meta itemprop="name" content="ReactPHP 源码阅读：EventLoop">
+        <meta itemprop="description" content="ReactPHP 源码阅读：EventLoop - Keep curious!">
+        <meta property="og:title" content="ReactPHP 源码阅读：EventLoop">
+        <meta property="og:description" content="ReactPHP 源码阅读：EventLoop - Keep curious!">
+        <meta property="og:image" content="https://www.gravatar.com/avatar/73e7f10f7883ff287d4571c4c190fd93?size=200">
+        <meta property="og:url" content="https://mscb402.github.io/article/2019-7-14/">
+        <meta property="og:site_name" content="Jonathan Chen&#39;s Blog">
+        <meta property="og:type" content="article">
+        <link rel="icon" type="image/png" href="https://mscb402.github.io/favicon-32x32.png" sizes="32x32">
+        <link rel="icon" type="image/png" href="https://mscb402.github.io/favicon-16x16.png" sizes="16x16">
+
+	
+
+        
+        <link rel="stylesheet" href="https://mscb402.github.io/sass/theme.min.7f4b7ce40e75c56b2479c669b6e33cd1381e870b71fcf495203cc50ba0259faa.css">
+
+        
+
+        
+            
+        
+    </head>
+    <body class="bilberry-hugo-theme">
+        
+<nav>
+
+    <div class="container">
+        <ul class="topnav">
+            
+                
+                    <li><a href="https://github.com/mscb402" target="_blank">Github</a></li>
+                
+            
+                
+                    <li><a href="/page/about/">关于我</a></li>
+                
+            
+        </ul>
+
+        
+    </div>
+</nav>
+
+
+        <header>
+    <div class="container">
+        <div class="logo">
+            <a href="/page/about/" class="logo">
+                
+                    <img src="https://www.gravatar.com/avatar/73e7f10f7883ff287d4571c4c190fd93?d=mm&size=200" alt="">
+                
+
+                <span class="overlay"><i class="fa fa-home"></i></span>
+            </a>
+        </div>
+        <div class="titles">
+            <h3 class="title"><a href="/">Jonathan Chen&#39;s Blog</a>
+            </h3>
+            
+                <span class="subtitle">Keep curious!</span>
+            
+            <h3 class="title">
+                <div class="social-media">
+                    
+                        <a href="https://twitter.com/chenbeng1" target="_blank"><i class="fa fa-twitter"></i></a>
+                    
+                    
+                        <a href="https://github.com/mscb402" target="_blank"><i class="fa fa-github"></i></a>
+                    
+                    
+                    
+                    
+                </div>
+            </h3>
+        </div>
+
+    
+
+        
+        <div class="toggler">
+        
+            <i class="fa fa-bars" aria-hidden="true"></i>
+        </div>
+    </div>
+</header>
+
+
+        <div class="main container">
+            
+     
+    <div class="article-wrapper u-cf single">
+        
+            <a class="bubble" href="/article/2019-7-14/">
+    <i class="fa fa-fw fa-pencil"></i>
+</a>
+
+<article class="default article">
+    
+
+    <div class="content">
+    <h3><a href="/article/2019-7-14/">ReactPHP 源码阅读：EventLoop</a></h3>
+    <div class="meta">
+        
+            
+                <span class="date moment">2019-07-14</span>
+            
+        
+
+        
+
+        
+            <span class="categories">
+                
+                    <a href="/categories/%E6%8A%80%E6%9C%AF">技术</a>
+                
+                    <a href="/categories/php">PHP</a>
+                
+            </span>
+        
+
+        
+    </div>
+
+    
+        
+
+<p>最近一直在忙工作上的事情，没有时间更新文章。今天抽空来更新一篇。今天我们来了解并阅读一下ReatPHP的源码。</p>
+
+<p>根据ReatPHP官网的介绍，我们可以了解到这是一个类似于JavaScript的“事件驱动”编程框架。</p>
+
+<blockquote>
+<p>ReactPHP is a low-level library for event-driven programming in PHP. At its core is an event loop, on top of which it provides low-level utilities, such as: Streams abstraction, async DNS resolver, network client/server, HTTP client/server and interaction with processes. Third-party libraries can use these components to create async network clients/servers and more.</p>
+</blockquote>
+
+<p>事件驱动有啥好处，以及它的适用范围，我这里就不在过多阐述了，有兴趣的可以看看我博客前面的几篇文章。</p>
+
+<p>总之，使用事件驱动，可以很好提升某些场景的性能。比如对于一些IO操作比较多的场景。</p>
+
+<h2 id="事件循环">事件循环</h2>
+
+<p>要涉及到“异步”、“事件驱动”，那事件循环机制就少不了了。从字面上来说，“事件驱动”就是以“事件”为基础，程序遇到“事件”，就唤醒开始执行。没遇到“事件”就被操作系统block挂起。</p>
+
+<p>这样反复执行的过程就是循环，事件循环就像生产者/消费者模型里的消费者，由程序本身进行生产产品（事件），由事件循环函数进行调度（消费）。</p>
+
+<p>大概的流程就类似于下面的代码。</p>
+
+<pre><code class="language-php">while(read_events()){//block here
+	$e = get_avaliable_event();
+	consume($e);
+}
+</code></pre>
+
+<h2 id="reatphp-eventloop-library">ReatPHP EventLoop library</h2>
+
+<p>Eventloop 这个库，是ReatPHP的一个和核心库，ReatPHP周边的库都是围绕这个库来的。所以，第一步我们要去了解这个核心库。</p>
+
+<p>这个是ReatPHP EventLoop 的 Github 地址 <a href="https://github.com/reactphp/event-loop">https://github.com/reactphp/event-loop</a> 。</p>
+
+<p>这个是ReatPHP EventLoop 的官方文档地址，你可以在这里看到例子，<a href="https://reactphp.org/event-loop/">https://reactphp.org/event-loop/</a></p>
+
+<h2 id="eventloop-使用例子">EventLoop 使用例子</h2>
+
+<p>我们从官方的例子入手，来看看他的底层实现。</p>
+
+<pre><code class="language-php">$loop = React\EventLoop\Factory::create();
+
+$server = stream_socket_server('tcp://127.0.0.1:8080');
+stream_set_blocking($server, false);
+
+$loop-&gt;addReadStream($server, function ($server) use ($loop) {
+    $conn = stream_socket_accept($server);
+    $data = &quot;HTTP/1.1 200 OK\r\nContent-Length: 3\r\n\r\nHi\n&quot;;
+    $loop-&gt;addWriteStream($conn, function ($conn) use (&amp;$data, $loop) {
+        $written = fwrite($conn, $data);
+        if ($written === strlen($data)) {
+            fclose($conn);
+            $loop-&gt;removeWriteStream($conn);
+        } else {
+            $data = substr($data, $written);
+        }
+    });
+});
+
+$loop-&gt;addPeriodicTimer(5, function () {
+    $memory = memory_get_usage() / 1024;
+    $formatted = number_format($memory, 3).'K';
+    echo &quot;Current memory usage: {$formatted}\n&quot;;
+});
+
+$loop-&gt;run();
+</code></pre>
+
+<p>可以看到，刚开始，它从EventLoop的工厂类中，创建了一个<code>$loop</code>。</p>
+
+<p>接着使用PHP内置的socket函数，监听本地的一个TCP 8080端口，这是这个<code>stream_socket_server</code>函数的官方文档<a href="https://php.net/manual/zh/function.stream-socket-server.php">https://php.net/manual/zh/function.stream-socket-server.php</a>。</p>
+
+<p>并将这个server句柄设置为<strong>非阻塞形式</strong>。同样，这里是这个<code>stream_set_blocking</code>函数的文档地址<a href="https://www.php.net/manual/zh/function.stream-set-blocking.php">https://www.php.net/manual/zh/function.stream-set-blocking.php</a>。</p>
+
+<p>接着，调用了2个loop内部提供的方法<code>addReadStream</code>和<code>addPeriodicTimer</code>。第一个表示添加一个读取事件，一旦这个所监听的资源（句柄）可读，那就执行我们给定的callback函数。第二个表示添加一个周期时钟事件。一直不断的周期执行。</p>
+
+<p>最后，调用<code>run</code>方法，开始启动事件循环。</p>
+
+<p>所以，这段程序主要在做哪些事情呢？</p>
+
+<p>第一，监听8080端口，一旦可读（client连接），那就调用callback函数，这个函数会从socket中读取一个连接句柄，并向通过调用loop中的<code>addWriteStream</code>方法，添加一个写入事件。这个写入事件的目的是当句柄可写的时候，写人一个HTTP respond<code>&quot;HTTP/1.1 200 OK\r\nContent-Length: 3\r\n\r\nHi\n&quot;;</code>。如果还没理解的话，那就是一旦用户连接到8080端口，服务器就会发送一个HTTP协议回应。当然这里的读和写都是通过事件来做到的。</p>
+
+<p>第二，一个5s的周期函数，一个时钟周期打印一下当前的内存占用情况。</p>
+
+<h2 id="源码阅读">源码阅读</h2>
+
+<p>我们可以从上面提供的Github地址下载eventloop的源码，其中<code>src</code>目录就是源码。</p>
+
+<h3 id="factory-工厂类">Factory 工厂类</h3>
+
+<p>打开<code>Factory.php</code>，这就是工厂类，一切开始的地方。</p>
+
+<p>可以看到，它很简洁，就一个create方法.</p>
+
+<pre><code class="language-php">public static function create()
+{
+	if (\function_exists('uv_loop_new')) {
+		// only use ext-uv on PHP 7
+		return new ExtUvLoop();
+	} elseif (\class_exists('libev\EventLoop', false)) {
+		return new ExtLibevLoop();
+	} elseif (\class_exists('EvLoop', false)) {
+		return new ExtEvLoop();
+	} elseif (\class_exists('EventBase', false)) {
+		return new ExtEventLoop();
+	} elseif (\function_exists('event_base_new') &amp;&amp; \PHP_MAJOR_VERSION === 5) {
+		// only use ext-libevent on PHP 5 for now
+		return new ExtLibeventLoop();
+	}
+	
+	return new StreamSelectLoop();
+
+}
+</code></pre>
+
+<p>你会发现，他还真是是一个工厂，里面有多种款式的Eventloop实现可以供你选择，这个函数会根据当前运行环境，自动选择一个最适合你的eventloop，很贴心有没有。</p>
+
+<p>不过也别犯选择困难症，其实他们都是一个模子刻出来的，他们都是<code>LoopInterface.php</code>这个文件里<code>LoopInterface</code>接口的实现类，所以他们本质都是一样的，只是性能上会有一些差别。</p>
+
+<p>其实它本质上就是在判断你本地是否有安装某一些扩展，如果没有安装，那就使用默认的<code>StreamSelectLoop</code>这个事件循环器。</p>
+
+<p>所以，这边我们就假设，本地的PHP运行环境非常简洁、纯净。那这个工厂函数就会new 一个<code>StreamSelectLoop</code>返回。</p>
+
+<h3 id="streamselectloop">StreamSelectLoop</h3>
+
+<p>这个就是EventLoop的本体了。它的文件是<code>StreamSelectLoop.php</code></p>
+
+<p>先从它定义的内部变量开始看，我给这几个变量加了点注释，可以很清楚明白的了解他们的作用。</p>
+
+<pre><code class="language-php">const MICROSECONDS_PER_SECOND = 1000000;
+private $futureTickQueue;//未来异步调用的队列
+private $timers;//定时器timer的集合（它被包装成了times对象）
+private $readStreams = array();//读 事件 的句柄列表
+private $readListeners = array();//读 事件 别激活的callback函数
+private $writeStreams = array();//写 事件 的句柄列表
+private $writeListeners = array();//写 事件 别激活的callback函数
+private $running;//当前运行状态
+private $pcntl = false;//某php扩展的安装状态
+private $pcntlPoll = false;//某php扩展的安装状态
+private $signals;
+</code></pre>
+
+<p>接下来了看看构造函数</p>
+
+<pre><code class="language-php">    public function __construct()
+    {
+        $this-&gt;futureTickQueue = new FutureTickQueue();
+        $this-&gt;timers = new Timers();
+        $this-&gt;pcntl = \function_exists('pcntl_signal') &amp;&amp; \function_exists('pcntl_signal_dispatch');
+        $this-&gt;pcntlPoll = $this-&gt;pcntl &amp;&amp; !\function_exists('pcntl_async_signals');
+        $this-&gt;signals = new SignalsHandler();
+        // prefer async signals if available (PHP 7.1+) or fall back to dispatching on each tick
+        if ($this-&gt;pcntl &amp;&amp; !$this-&gt;pcntlPoll) {
+            \pcntl_async_signals(true);
+        }
+    }
+</code></pre>
+
+<p>可以看到，它这里其实就是对上面这些变量进行赋值。这里的<code>SIGNALS</code>事件需要依赖扩展，所以我们也不去考虑，主要用到的就是读/写事件和<code>Timer</code>以及<code>FutureTickQueue</code>。</p>
+
+<p><code>Times</code>和 <code>FutureTickQueue</code>我们后面再看。</p>
+
+<p>按照上面提供的例子，我们用到了<code>addReadStream</code>这个方法，于是我们来看看read事件的添加</p>
+
+<pre><code class="language-php">    public function addReadStream($stream, $listener)
+    {
+        $key = (int) $stream;
+        if (!isset($this-&gt;readStreams[$key])) {
+            $this-&gt;readStreams[$key] = $stream;
+            $this-&gt;readListeners[$key] = $listener;
+        }
+    }
+</code></pre>
+
+<p>非常非常简单，就是判断一下当前read事件是否已经添加到列表中，如果没有添加，那就把read句柄以及callback函数分别添加到<code>readStreams</code>和<code>readListeners</code>中。</p>
+
+<p>同理，write事件，也是如此操作。</p>
+
+<p>除了添加事件以外，还有删除事件，那删除事件也其实就是把事件从array里删除掉。这里也就不再多言了。</p>
+
+<p>然后，就是添加一个时间周期函数。</p>
+
+<pre><code class="language-php">    public function addPeriodicTimer($interval, $callback)
+    {
+        $timer = new Timer($interval, $callback, true);
+        $this-&gt;timers-&gt;add($timer);
+        return $timer;
+    }
+</code></pre>
+
+<p>它new 了一个Time的函数，并把它添加到<code>timers对象</code>里面。这个<code>timers对象</code>我们后面在去看它的源码。</p>
+
+<p>最后，我们来看看重中之重的函数，<code>run</code>方法</p>
+
+<pre><code class="language-php">    public function run()
+    {
+        $this-&gt;running = true;
+        while ($this-&gt;running) {
+            $this-&gt;futureTickQueue-&gt;tick();
+            $this-&gt;timers-&gt;tick();
+            // Future-tick queue has pending callbacks ...
+            if (!$this-&gt;running || !$this-&gt;futureTickQueue-&gt;isEmpty()) {
+                $timeout = 0;
+            // There is a pending timer, only block until it is due ...
+            } elseif ($scheduledAt = $this-&gt;timers-&gt;getFirst()) {
+                $timeout = $scheduledAt - $this-&gt;timers-&gt;getTime();
+                if ($timeout &lt; 0) {
+                    $timeout = 0;
+                } else {
+                    // Convert float seconds to int microseconds.
+                    // Ensure we do not exceed maximum integer size, which may
+                    // cause the loop to tick once every ~35min on 32bit systems.
+                    $timeout *= self::MICROSECONDS_PER_SECOND;
+                    $timeout = $timeout &gt; \PHP_INT_MAX ? \PHP_INT_MAX : (int)$timeout;
+                }
+            // The only possible event is stream or signal activity, so wait forever ...
+            } elseif ($this-&gt;readStreams || $this-&gt;writeStreams || !$this-&gt;signals-&gt;isEmpty()) {
+                $timeout = null;
+            // There's nothing left to do ...
+            } else {
+                break;
+            }
+            $this-&gt;waitForStreamActivity($timeout);
+        }
+    }
+</code></pre>
+
+<p>通过一个while死循环，不断的执行。</p>
+
+<p>开头，调用<code>$this-&gt;futureTickQueue-&gt;tick();</code>来执行所有已经存在futureTickQueue队列的的异步函数。</p>
+
+<p>执行完成以后，调用<code>$this-&gt;timers-&gt;tick();</code>来执行所有符合当前激活条件的时间Timer对象。</p>
+
+<p>接下来的一大段if语句，它的作用是用于设置<code>$timeout</code>，这个接下来有用。</p>
+
+<p>如果<code>futureTickQueue</code>队列不为空，则说明，有异步任务没完成，那就设置$timeout为0。</p>
+
+<p>另外一个条件是，取出当前时间列表的第一个任务（也就是下一个时间点需要执行任务），然后判断当前时间和下一个任务的执行时间的差值，如果小于0，说明实际上执行时间已经过，那就设置<code>$timeout</code>为0，这样下一次while循环就能执行到这个时间函数。如果是大于0，那就把<code>timeout</code>设置为这个值，这样可以保证在这个函数需要执行的时候能及时结束block，并执行它。</p>
+
+<p>设置完<code>timeout</code>以后，调用<code>$this-&gt;waitForStreamActivity($timeout);</code>函数，进行等待。</p>
+
+<p>下面是这个函数的代码:</p>
+
+<pre><code class="language-php"> private function waitForStreamActivity($timeout)
+    {
+        $read  = $this-&gt;readStreams;
+        $write = $this-&gt;writeStreams;
+        $available = $this-&gt;streamSelect($read, $write, $timeout);
+        if ($this-&gt;pcntlPoll) {
+            \pcntl_signal_dispatch();
+        }
+        if (false === $available) {
+            // if a system call has been interrupted,
+            // we cannot rely on it's outcome
+            return;
+        }
+        foreach ($read as $stream) {
+            $key = (int) $stream;
+            if (isset($this-&gt;readListeners[$key])) {
+                \call_user_func($this-&gt;readListeners[$key], $stream);
+            }
+        }
+        foreach ($write as $stream) {
+            $key = (int) $stream;
+            if (isset($this-&gt;writeListeners[$key])) {
+                \call_user_func($this-&gt;writeListeners[$key], $stream);
+            }
+        }
+    }
+
+    private function streamSelect(array &amp;$read, array &amp;$write, $timeout)
+    {
+        if ($read || $write) {
+            $except = null;
+            // suppress warnings that occur, when stream_select is interrupted by a signal
+            return @\stream_select($read, $write, $except, $timeout === null ? null : 0, $timeout);
+        }
+        if ($timeout &gt; 0) {
+            \usleep($timeout);
+        } elseif ($timeout === null) {
+            // wait forever (we only reach this if we're only awaiting signals)
+            // this may be interrupted and return earlier when a signal is received
+            \sleep(PHP_INT_MAX);
+        }
+        return 0;
+    }
+
+</code></pre>
+
+<p>它会取出read事件和write事件的所有句柄列表，传给<code>streamSelect</code>方法，<code>streamSelect</code>方法其实做的事情就2件。</p>
+
+<p>第一，如果read和write列表不为空，那就调用系统的stream_select函数，你可以从PHP的官方文档中看到它<a href="https://www.php.net/manual/zh/function.stream-select.php">https://www.php.net/manual/zh/function.stream-select.php</a> 它其实就是一个select的system call，有2种情况它会方法，不然就一直阻塞。1.read或者write可用了，2.timeout时间到了（这也是为什么前面要设置timeout的原因）。</p>
+
+<p>第二，如果read和write列表都是空的，那就<code>sleep</code>到<code>timeout</code>结束。</p>
+
+<p>所以，这个<code>streamSelect</code>主要的作用就是进行阻塞操作，阻塞完毕以后，遍历read和write，执行对应的callback函数。这样一次<code>while</code>循环，就算执行完毕。接下来会进行下一轮的循环。</p>
+
+<p>这个调度其实还是很好理解。</p>
+
+<h3 id="futuretickqueue">FutureTickQueue</h3>
+
+<p>直接上代码</p>
+
+<pre><code class="language-php">final class FutureTickQueue
+{
+    private $queue;
+    public function __construct()
+    {
+        $this-&gt;queue = new SplQueue();
+    }
+
+    public function add($listener)
+    {
+        $this-&gt;queue-&gt;enqueue($listener);
+    }
+
+    public function tick()
+    {
+        // Only invoke as many callbacks as were on the queue when tick() was called.
+        $count = $this-&gt;queue-&gt;count();
+        while ($count--) {
+            \call_user_func(
+                $this-&gt;queue-&gt;dequeue()
+            );
+        }
+    }
+
+    public function isEmpty()
+    {
+        return $this-&gt;queue-&gt;isEmpty();
+    }
+}
+
+</code></pre>
+
+<p>这边的<code>SplQueue</code>是一个PHP内置的双向链表。这边用这个双向链表来保存需要异步执行的函数指针。</p>
+
+<p>前面调度函数中的<code>$this-&gt;futureTickQueue-&gt;tick();</code>其实就是把依次取出队列里的函数，并以此执行它。</p>
+
+<h3 id="timers">Timers</h3>
+
+<p>这里的<code>Timers</code>的作用是保存一大批<code>Timer</code>对象。</p>
+
+<p><code>Timer</code>对象是一个时钟周期任务的最小单位，文件在<code>Timer/Timer.php</code>里，虽然它是一个对象，其实是一个数据结构。</p>
+
+<p>它主要保存以下3个参数</p>
+
+<pre><code class="language-php">    private $interval;//时间间隔，int
+    private $callback;//回调函数
+    private $periodic;//是否为周期函数，bool
+
+</code></pre>
+
+<p>而Timers它的文件地址是<code>Timer/Timers.php</code>。它的代码比较长，不方便全部展示出来，我们拿一些出来看看就好。</p>
+
+<p>它也有几个变量</p>
+
+<pre><code class="language-php"> 	private $time;//当前时间
+    private $timers = array();//时间点对应的Time（包含callback函数）
+    private $schedule = array();//时间点列表
+    private $sorted = true;
+    private $useHighResolution;
+
+</code></pre>
+
+<p>它的<code>add函数</code>代码如下</p>
+
+<pre><code class="language-php">    public function add(TimerInterface $timer)
+    {
+        $id = \spl_object_hash($timer);
+        $this-&gt;timers[$id] = $timer;
+        $this-&gt;schedule[$id] = $timer-&gt;getInterval() + $this-&gt;updateTime();
+        $this-&gt;sorted = false;
+    }
+
+</code></pre>
+
+<p>无需多言，就是把这个加入到列表中。对了<code>spl_object_hash</code>这个也是一个PHP的内置函数，可以去看看。它是可以给出一个对象的唯一hash值。</p>
+
+<p><code>getFirst()函数</code>就是取出第一个时间点，同时会将数组的内部指针指向第一个单元。</p>
+
+<pre><code class="language-php">    public function getFirst()
+    {
+        // ensure timers are sorted to simply accessing next (first) one
+        if (!$this-&gt;sorted) {
+            $this-&gt;sorted = true;
+            \asort($this-&gt;schedule);
+        }
+        return \reset($this-&gt;schedule);
+    }
+
+</code></pre>
+
+<p>最主要的可能就是这个<code>trick函数</code>了</p>
+
+<pre><code class="language-php">    public function tick()
+    {
+        // ensure timers are sorted so we can execute in order
+        if (!$this-&gt;sorted) {
+            $this-&gt;sorted = true;
+            \asort($this-&gt;schedule);
+        }
+        $time = $this-&gt;updateTime();
+        foreach ($this-&gt;schedule as $id =&gt; $scheduled) {
+            // schedule is ordered, so loop until first timer that is not scheduled for execution now
+            if ($scheduled &gt;= $time) {
+                break;
+            }
+            // skip any timers that are removed while we process the current schedule
+            if (!isset($this-&gt;schedule[$id]) || $this-&gt;schedule[$id] !== $scheduled) {
+                continue;
+            }
+            $timer = $this-&gt;timers[$id];
+            \call_user_func($timer-&gt;getCallback(), $timer);
+            // re-schedule if this is a periodic timer and it has not been cancelled explicitly already
+            if ($timer-&gt;isPeriodic() &amp;&amp; isset($this-&gt;timers[$id])) {
+                $this-&gt;schedule[$id] = $timer-&gt;getInterval() + $time;
+                $this-&gt;sorted = false;
+            } else {
+                unset($this-&gt;timers[$id], $this-&gt;schedule[$id]);
+            }
+        }
+    }
+
+</code></pre>
+
+<p>它的作用，先是对数组按照时间点，从小到大排序。然后遍历所有时间点，把小于当前时间的<code>Timer</code>都给执行了，而且如果这个<code>Timer</code>是一个周期的<code>Timer</code>那就执行完成以后再一次放到时间点列表<code>schedule</code>里面，期待下一次的执行。</p>
+
+<h2 id="小结">小结</h2>
+
+<p>总的来说，<code>ReatPHP</code>这个<code>EventLoop</code>的包，不是很复杂，甚至有点简单。非常适合初学者进行阅读学习。</p>
+
+<hr />
+
+<p><em>注意：本文未经许可，不得转载</em></p>
+
+    
+</div>
+
+    
+<div class="footer">
+
+
+    
+        <div class="tags">
+            <i class="fa fa-tags"></i>
+            <div class="links">
+                
+                    <a href="/tags/reactphp">ReactPHP</a>
+                
+                    <a href="/tags/eventloop">EventLoop</a>
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+</article>
+
+        
+    </div>
+
+    
+        
+    
+
+     
+
+        </div>
+
+        
+<footer>
+    <div class="container">
+
+        
+        <div class="recent-posts">
+            <strong>最新帖子</strong>
+                <ul>
+                
+                    <li>
+                        <a href="/article/2019-7-14/">ReactPHP 源码阅读：EventLoop</a>
+                    </li>
+                
+                    <li>
+                        <a href="/article/2019-6-9/">用Redis和JavaScript/express实现一个RateLimit截流器</a>
+                    </li>
+                
+                    <li>
+                        <a href="/article/2019-6-8/">拒绝网络暴力！基于深度学习的网络欺凌检测</a>
+                    </li>
+                
+                    <li>
+                        <a href="/article/2019-5-12/">PHP协程之路-协程实现</a>
+                    </li>
+                
+                    <li>
+                        <a href="/article/2019-5-1/">PHP协程之路-事件循环Event Loop</a>
+                    </li>
+                
+                    <li>
+                        <a href="/article/2019-4-21/">PHP协程之路-yield from和协程初步</a>
+                    </li>
+                
+                </ul>
+        </div>
+        
+
+        
+        <div class="categories">
+            <a href="/categories/"><strong>分类</strong></a>
+                <ul>
+                
+                    <li>
+                        <a href="/categories/%E6%8A%80%E6%9C%AF">技术 (8)</a>
+                    </li>
+                
+                    <li>
+                        <a href="/categories/%E6%8A%80%E6%9C%AF%E6%A6%82%E5%BF%B5">技术概念 (4)</a>
+                    </li>
+                
+                    <li>
+                        <a href="/categories/php">Php (3)</a>
+                    </li>
+                
+                    <li>
+                        <a href="/categories/javascript">Javascript (1)</a>
+                    </li>
+                
+                    <li>
+                        <a href="/categories/python">Python (1)</a>
+                    </li>
+                
+                    <li>
+                        <a href="/categories/redis">Redis (1)</a>
+                    </li>
+                
+            </ul>
+        </div>
+        
+
+        <div class="right">
+            
+            <div class="external-profiles">
+                <strong>社交媒体</strong>
+
+                
+                
+                    <a href="https://twitter.com/chenbeng1" target="_blank"><i class="fa fa-twitter-adblock-proof"></i></a>
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                    <a href="https://github.com/mscb402" target="_blank"><i class="fa fa-github"></i></a>
+                
+                
+            </div>
+            
+
+            
+        </div>
+    </div>
+</footer>
+
+
+<div class="credits">
+    <div class="container">
+        <div class="copyright">
+            <a href="https://github.com/mscb402" target="_blank">
+                &copy;
+                
+                    2019
+                
+                by Chen Beng (Jonathan Chen)
+            </a>
+	    
+        </div>
+        <div class="author">
+            <a href="https://github.com/Lednerb/bilberry-hugo-theme" target="_blank">Bilberry Hugo Theme</a>
+        </div>
+    </div>
+</div>
+
+
+        
+
+        
+
+        
+        
+        <script type="text/javascript" src="https://mscb402.github.io/js/externalDependencies.2a3cf2b558bd16302d997f6c20de885831fe6e39f05a054ddede6211a4a78d882081b58973893707bbefb74dc3611b37e66edb04bc5f075f4a198b2d135d96ae.js" integrity="sha512-KjzytVi9FjAtmX9sIN6IWDH&#43;bjnwWgVN3t5iEaSnjYgggbWJc4k3B7vvt03DYRs35m7bBLxfB19KGYstE12Wrg=="></script>
+
+        
+        
+        <script type="text/javascript" src="https://mscb402.github.io/js/theme.ba9945b0c16d4ddb26fd4bd58193d268e92614f0c74cced07d6d8641ac7564d7.js" integrity="sha256-uplFsMFtTdsm/UvVgZPSaOkmFPDHTM7QfW2GQax1ZNc="></script>
+
+        <script>
+            $(".moment").each(function() {
+                $(this).text(
+                    moment( $(this).text() )
+                        .locale( "zh-cn" )
+                        .format('LL')
+                );
+            });
+
+            $(".footnote-return sup").html("【返回】");
+        </script>
+
+        
+            
+        
+
+        
+
+
+    </body>
+</html>
